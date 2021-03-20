@@ -10,6 +10,13 @@ namespace LingStudioWinFormsApp
     {
         private string folder;
         private byte[] fileBytes;
+        private int[] byteIndexOfUtf8CharAt;
+        private int[] byteIndexOfGbCharAt;
+        private int[] utf8CharIndexOfByteAt;
+        private int[] gbCharIndexOfByteAt;
+        private bool mayBeUtf8;
+        private bool mayBeGb;
+        private bool ignoreSelectionChanged = false;
 
         public Form1()
         {
@@ -70,11 +77,112 @@ namespace LingStudioWinFormsApp
             fileToolStripStatusLabel.Text = e.Node.Name;
             fileBytes = File.ReadAllBytes(e.Node.Name);
             ChooseBaseN(2);
-            utf8ToolStripButton.Enabled = EncodingMayBe(fileBytes, "utf8");
-            gbToolStripButton.Enabled = EncodingMayBe(fileBytes, "gb");
-            if (utf8ToolStripButton.Enabled)
+            
+            int i, j;
+
+            // May encoding be utf8?
+            mayBeUtf8 = true;
+            byteIndexOfUtf8CharAt = new int[fileBytes.Length];
+            utf8CharIndexOfByteAt = new int[fileBytes.Length];
+            i = 0;
+            j = 0;
+            while (mayBeUtf8 && i < fileBytes.Length)
+                if (fileBytes[i] <= 0x7F)
+                {
+                    utf8CharIndexOfByteAt[i] = j;
+                    byteIndexOfUtf8CharAt[j] = i;
+                    i++;
+                    j++;
+                }
+                else if (fileBytes[i] >= 0xC2 && fileBytes[i] <= 0xDF
+                    && i < fileBytes.Length - 1
+                    && fileBytes[i + 1] >= 0x80 && fileBytes[i + 1] <= 0xBF)
+                {
+                    utf8CharIndexOfByteAt[i] = j;
+                    utf8CharIndexOfByteAt[i + 1] = -j - 1;
+                    byteIndexOfUtf8CharAt[j] = i;
+                    i += 2;
+                    j++;
+                }
+                else if (fileBytes[i] >= 0xE0 && fileBytes[i] <= 0xEF
+                    && i < fileBytes.Length - 2
+                    && fileBytes[i + 1] >= 0x80 && fileBytes[i + 1] <= 0xBF
+                    && fileBytes[i + 2] >= 0x80 && fileBytes[i + 2] <= 0xBF
+                    && (fileBytes[i] != 0xE0 || fileBytes[i + 1] >= 0xA0)
+                    && (fileBytes[i] != 0xED || fileBytes[i + 1] <= 0x9F))
+                {
+                    utf8CharIndexOfByteAt[i] = j;
+                    utf8CharIndexOfByteAt[i + 1] = -j - 1;
+                    utf8CharIndexOfByteAt[i + 2] = -j - 1;
+                    byteIndexOfUtf8CharAt[j] = i;
+                    i += 3;
+                    j++;
+                }
+                else if (fileBytes[i] >= 0xF0 && fileBytes[i] <= 0xF4
+                    && i < fileBytes.Length - 3
+                    && fileBytes[i + 1] >= 0x80 && fileBytes[i + 1] <= 0xBF
+                    && fileBytes[i + 2] >= 0x80 && fileBytes[i + 2] <= 0xBF
+                    && fileBytes[i + 3] >= 0x80 && fileBytes[i + 3] <= 0xBF
+                    && (fileBytes[i] != 0xF0 || fileBytes[i + 1] >= 0x90)
+                    && (fileBytes[i] != 0xF4 || fileBytes[i + 1] <= 0x8F))
+                {
+                    utf8CharIndexOfByteAt[i] = j;
+                    utf8CharIndexOfByteAt[i + 1] = -j - 1;
+                    utf8CharIndexOfByteAt[i + 2] = -j - 1;
+                    utf8CharIndexOfByteAt[i + 3] = -j - 1;
+                    byteIndexOfUtf8CharAt[j] = i;
+                    i += 4;
+                    j++;
+                }
+                else
+                    mayBeUtf8 = false;
+
+            // May encoding be gb(18030+0x80)?
+            mayBeGb = true;
+            byteIndexOfGbCharAt = new int[fileBytes.Length];
+            gbCharIndexOfByteAt = new int[fileBytes.Length];
+            i = 0;
+            j = 0;
+            while (mayBeGb && i < fileBytes.Length)
+                if (fileBytes[i] <= 0x80)
+                {
+                    gbCharIndexOfByteAt[i] = j;
+                    byteIndexOfGbCharAt[j] = i;
+                    i++;
+                    j++;
+                }
+                else if (fileBytes[i] >= 0x81 && fileBytes[i] <= 0xFE
+                    && i < fileBytes.Length - 1
+                    && fileBytes[i + 1] >= 0x40 && fileBytes[i + 1] != 0x7F && fileBytes[i + 1] <= 0xFE)
+                {
+                    gbCharIndexOfByteAt[i] = j;
+                    gbCharIndexOfByteAt[i + 1] = -j - 1;
+                    byteIndexOfGbCharAt[j] = i;
+                    i += 2;
+                    j++;
+                }
+                else if (fileBytes[i] >= 0x81 && fileBytes[i] <= 0xFE
+                    && i < fileBytes.Length - 3
+                    && fileBytes[i + 1] >= 0x30 && fileBytes[i + 1] <= 0x39
+                    && fileBytes[i + 2] >= 0x81 && fileBytes[i + 2] <= 0xFE
+                    && fileBytes[i + 3] >= 0x30 && fileBytes[i + 3] <= 0x39)
+                {
+                    gbCharIndexOfByteAt[i] = j;
+                    gbCharIndexOfByteAt[i + 1] = -j - 1;
+                    gbCharIndexOfByteAt[i + 2] = -j - 1;
+                    gbCharIndexOfByteAt[i + 3] = -j - 1;
+                    byteIndexOfGbCharAt[j] = i;
+                    i += 4;
+                    j++;
+                }
+                else
+                    mayBeGb = false;
+            
+            utf8ToolStripButton.Enabled = mayBeUtf8;
+            gbToolStripButton.Enabled = mayBeGb;
+            if (mayBeUtf8)
                 ChooseEncoding("utf8");
-            else if (gbToolStripButton.Enabled)
+            else if (mayBeGb)
                 ChooseEncoding("gb");
             else
                 ChooseEncoding("");
@@ -263,6 +371,58 @@ namespace LingStudioWinFormsApp
                     break;
             }
             return mayBe;
+        }
+
+        private void richTextBox1_SelectionChanged(object sender, EventArgs e)
+        {
+            if (!ignoreSelectionChanged)
+            {
+                ignoreSelectionChanged = true;
+                listBox1.ClearSelected();
+                //listBox1.SelectedIndices.Clear();
+                int x = richTextBox1.SelectionStart;
+                int y = x + richTextBox1.SelectionLength;
+
+                // Solve the \r\n problem, though dirty
+                int xLine = richTextBox1.GetLineFromCharIndex(x);
+                int yLine = richTextBox1.GetLineFromCharIndex(y);
+                for (int i = x + xLine; i < y + yLine; i++)
+                {
+                    if (utf8ToolStripButton.Checked)
+                    {
+                        int j = byteIndexOfUtf8CharAt[i];
+                        listBox1.SelectedIndices.Add(j);
+                        j++;
+                        while (j < fileBytes.Length && utf8CharIndexOfByteAt[j] == -i - 1)
+                        {
+                            listBox1.SelectedIndices.Add(j);
+                            j++;
+                        }
+                    }
+                    else if (gbToolStripButton.Checked)
+                    {
+                        int j = byteIndexOfGbCharAt[i];
+                        listBox1.SelectedIndices.Add(j);
+                        j++;
+                        while (j < fileBytes.Length && gbCharIndexOfByteAt[j] == -i - 1)
+                        {
+                            listBox1.SelectedIndices.Add(j);
+                            j++;
+                        }
+                    }
+                }
+                ignoreSelectionChanged = false;
+            }
+        }
+
+        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!ignoreSelectionChanged)
+            {
+                ignoreSelectionChanged = true;
+                //
+                ignoreSelectionChanged = false;
+            }
         }
     }
 }

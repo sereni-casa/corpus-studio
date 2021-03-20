@@ -191,8 +191,10 @@ namespace LingStudioWinFormsApp
             this.listBox1.ItemHeight = 36;
             this.listBox1.Location = new System.Drawing.Point(0, 50);
             this.listBox1.Name = "listBox1";
+            this.listBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
             this.listBox1.Size = new System.Drawing.Size(728, 840);
             this.listBox1.TabIndex = 2;
+            this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
             // 
             // toolStrip3
             // 
@@ -277,6 +279,7 @@ namespace LingStudioWinFormsApp
             // 
             // richTextBox1
             // 
+            this.richTextBox1.DetectUrls = false;
             this.richTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.richTextBox1.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.richTextBox1.Location = new System.Drawing.Point(0, 50);
@@ -285,6 +288,8 @@ namespace LingStudioWinFormsApp
             this.richTextBox1.Size = new System.Drawing.Size(752, 840);
             this.richTextBox1.TabIndex = 0;
             this.richTextBox1.Text = "";
+            this.richTextBox1.WordWrap = false;
+            this.richTextBox1.SelectionChanged += new System.EventHandler(this.richTextBox1_SelectionChanged);
             // 
             // toolStrip4
             // 
@@ -382,7 +387,7 @@ namespace LingStudioWinFormsApp
             this.Controls.Add(this.toolStrip1);
             this.Name = "Form1";
             this.ShowIcon = false;
-            this.Text = "LingStudio";
+            this.Text = "编码查看器";
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);
