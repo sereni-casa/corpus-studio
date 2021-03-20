@@ -1,0 +1,187 @@
+﻿<Window x:Class="CorpusStudio.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CorpusStudio"
+        mc:Ignorable="d"
+        Title="Corpus Studio" Icon="/CorpusStudioIcon.png" Closing="MainWindowClosing">
+    <Window.Resources>
+        <local:MainWindowResources x:Key="MainWindowResources"/>
+    </Window.Resources>
+    <Window.DataContext>
+        <Binding Source="{StaticResource MainWindowResources}"/>
+    </Window.DataContext>
+    <Window.CommandBindings>
+        <CommandBinding Command="New" Executed="NewCmdExecuted" CanExecute="AlwaysCanExecute"/>
+        <CommandBinding Command="Open" Executed="OpenCmdExecuted" CanExecute="AlwaysCanExecute"/>
+        <CommandBinding Command="Save" Executed="SaveCmdExecuted" CanExecute="SaveCmdCanExecute"/>
+        <CommandBinding Command="SaveAs" Executed="SaveAsCmdExecuted" CanExecute="CanExecuteWhenHasSelectedCorpus"/>
+        <CommandBinding Command="Close" Executed="CloseCmdExecuted" CanExecute="CanExecuteWhenHasSelectedCorpus"/>
+        <CommandBinding Command="{x:Static local:MainWindow.AboutCmd}" Executed="AboutCmdExecuted" CanExecute="AlwaysCanExecute"/>
+        <CommandBinding Command="{x:Static local:MainWindow.ExitCmd}" Executed="ExitCmdExecuted" CanExecute="AlwaysCanExecute"/>
+        <CommandBinding Command="{x:Static local:MainWindow.SaveAllCmd}" Executed="SaveAllCmdExecuted" CanExecute="SaveAllCmdCanExecute"/>
+        <CommandBinding Command="{x:Static local:MainWindow.TextFileAddCmd}" Executed="TextFileAddCmdExecuted" CanExecute="CanExecuteWhenHasSelectedCorpus"/>
+        <CommandBinding Command="{x:Static local:MainWindow.TextFileRemoveCmd}" Executed="TextFileRemoveCmdExecuted" CanExecute="TextFileRemoveCmdCanExecute"/>
+        <CommandBinding Command="{x:Static local:MainWindow.TextFileSelectAllCmd}" Executed="TextFileSelectAllCmdExecuted" CanExecute="TextFileSelectAllCmdCanExecute"/>
+        <CommandBinding Command="{x:Static local:MainWindow.TextFileUnselectAllCmd}" Executed="TextFileUnselectAllCmdExecuted" CanExecute="TextFileUnselectAllCmdCanExecute"/>
+        <CommandBinding Command="{x:Static local:MainWindow.TextFileChooseUtf8EncodingCmd}" Executed="TextFileChooseUtf8EncodingCmdExecuted" CanExecute="TextFileChooseUtf8EncodingCmdCanExecute"/>
+        <CommandBinding Command="{x:Static local:MainWindow.TextFileChooseGbEncodingCmd}" Executed="TextFileChooseGbEncodingCmdExecuted" CanExecute="TextFileChooseGbEncodingCmdCanExecute"/>
+        <CommandBinding Command="{x:Static local:MainWindow.CountCmd}" Executed="CountCmdExecuted" CanExecute="CountCmdCanExecute"/>
+        <CommandBinding Command="{x:Static local:MainWindow.SearchCmd}" Executed="SearchCmdExecuted" CanExecute="SearchCmdCanExecute"/>
+    </Window.CommandBindings>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <!--<MenuItem Header="程序">
+                <MenuItem Header="关于" Command="{x:Static local:MainWindow.AboutCmd}"/>
+                <MenuItem Header="退出" Command="{x:Static local:MainWindow.ExitCmd}" InputGestureText="Alt+F4"/>
+            </MenuItem>-->
+            <MenuItem Header="语料库">
+                <MenuItem Header="新建" Command="New"/>
+                <MenuItem Header="打开" Command="Open"/>
+                <Separator/>
+                <MenuItem Header="保存" Command="Save"/>
+                <MenuItem Header="另存为" Command="SaveAs"/>
+                <MenuItem Header="全部保存" Command="{x:Static local:MainWindow.SaveAllCmd}" InputGestureText="Ctrl+Shift+A"/>
+                <Separator/>
+                <MenuItem Header="关闭" Command="Close"/>
+            </MenuItem>
+            <MenuItem Header="添加语料">
+                <MenuItem Header="从文件" Command="{x:Static local:MainWindow.TextFileAddCmd}" CommandParameter="File"/>
+                <MenuItem Header="从目录" Command="{x:Static local:MainWindow.TextFileAddCmd}" CommandParameter="Dir"/>
+                <MenuItem Header="从目录树" Command="{x:Static local:MainWindow.TextFileAddCmd}" CommandParameter="DirTree"/>
+            </MenuItem>
+            <!--<MenuItem Header="输出">
+                <MenuItem Header="字符串频率统计"/>
+                <MenuItem Header="字符检索"/>
+                <MenuItem Header="高级字符检索"/>
+                <MenuItem Header="字符串检索"/>
+                <MenuItem Header="正则表达式检索"/>
+            </MenuItem>-->
+            <!--<MenuItem Header="编辑">
+                <MenuItem Header="剪切" Command="Cut"/>
+                <MenuItem Header="复制" Command="Copy"/>
+                <MenuItem Header="粘贴" Command="Paste"/>
+                <MenuItem Header="删除" Command="Delete"/>
+            </MenuItem>-->
+        </Menu>
+        <TabControl ItemsSource="{Binding CorpusCollection}" SelectedItem="{Binding SelectedCorpus}">
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate>
+                    <DockPanel>
+                        <Grid DockPanel.Dock="Top">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <Label Content="语料库：" HorizontalAlignment="Right"/>
+                            <Label Content="{Binding FilePath}" Grid.Column="1"/>
+                            <Label Content="保存状态：" HorizontalAlignment="Right" Grid.Row="1"/>
+                            <Label Grid.Column="1" Grid.Row="1">
+                                <TextBlock>
+                                    <Run Text="{Binding SaveStatus, Mode=OneWay}"/>
+                                    <Hyperlink Command="ApplicationCommands.Save">保存</Hyperlink>
+                                </TextBlock>
+                            </Label>
+                        </Grid>
+                        <Grid DockPanel.Dock="Bottom">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <Label Content="添加语料：" HorizontalAlignment="Right"/>
+                            <Label Grid.Column="1">
+                                <TextBlock>
+                                    <Hyperlink Command="{x:Static local:MainWindow.TextFileAddCmd}" CommandParameter="File">从文件</Hyperlink>
+                                    <Hyperlink Command="{x:Static local:MainWindow.TextFileAddCmd}" CommandParameter="Dir">从目录</Hyperlink>
+                                    <Hyperlink Command="{x:Static local:MainWindow.TextFileAddCmd}" CommandParameter="DirTree">从目录树</Hyperlink>
+                                </TextBlock>
+                            </Label>
+                            <Label Content="已选语料：" HorizontalAlignment="Right" Grid.Row="1"/>
+                            <Label Grid.Column="1" Grid.Row="1">
+                                <TextBlock>
+                                    <Run Text="{Binding ElementName=textFileListView, Path=SelectedItems.Count, Mode=OneWay}"/>
+                                    <Run Text="项"/>
+                                    <Hyperlink Command="{x:Static local:MainWindow.TextFileRemoveCmd}" CommandParameter="{Binding ElementName=textFileListView}">删除</Hyperlink>
+                                    <Hyperlink Command="{x:Static local:MainWindow.TextFileSelectAllCmd}" CommandParameter="{Binding ElementName=textFileListView}">全选</Hyperlink>
+                                    <Hyperlink Command="{x:Static local:MainWindow.TextFileUnselectAllCmd}" CommandParameter="{Binding ElementName=textFileListView}">全不选</Hyperlink>
+                                </TextBlock>
+                            </Label>
+                            <Label Content="选择编码：" HorizontalAlignment="Right" Grid.Row="2"/>
+                            <Label Grid.Column="1" Grid.Row="2">
+                                <TextBlock>
+                                    <Hyperlink Command="{x:Static local:MainWindow.TextFileChooseUtf8EncodingCmd}" CommandParameter="{Binding ElementName=textFileListView}">UTF-8</Hyperlink>
+                                    <Hyperlink Command="{x:Static local:MainWindow.TextFileChooseGbEncodingCmd}" CommandParameter="{Binding ElementName=textFileListView}">GB</Hyperlink>
+                                </TextBlock>
+                            </Label>
+                            <Label Content="串频统计：" HorizontalAlignment="Right" Grid.Row="3"/>
+                            <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="3">
+                                <Label Content="最小串长"/>
+                                <TextBox VerticalAlignment="Center" Text="{Binding CountMinLen}"/>
+                                <Label Content="字"/>
+                                <Label Content="最大串长"/>
+                                <TextBox VerticalAlignment="Center" Text="{Binding CountMaxLen}"/>
+                                <Label Content="字"/>
+                                <Label Content="最低串频"/>
+                                <TextBox VerticalAlignment="Center" Text="{Binding CountMinFreq}"/>
+                                <Label Content="次"/>
+                                <Label/>
+                                <CheckBox VerticalAlignment="Center" Content="仅限汉字串" IsChecked="{Binding CountHanOnly}"/>
+                                <Label/>
+                                <TextBlock VerticalAlignment="Center">
+                                    <Hyperlink Command="{x:Static local:MainWindow.CountCmd}">统计</Hyperlink>
+                                </TextBlock>
+                            </StackPanel>
+                            <Label Content="字词检索：" HorizontalAlignment="Right" Grid.Row="4"/>
+                            <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="4">
+                                <Label Content="输出前文"/>
+                                <TextBox VerticalAlignment="Center" Text="{Binding SearchLeftLen}"/>
+                                <Label Content="字"/>
+                                <Label Content="输出后文"/>
+                                <TextBox VerticalAlignment="Center" Text="{Binding SearchRightLen}"/>
+                                <Label Content="字"/>
+                                <Label/>
+                                <ComboBox VerticalAlignment="Center" SelectedIndex="{Binding SearchMode}">
+                                    <ComboBoxItem Content="字符"/>
+                                    <ComboBoxItem Content="复杂字符"/>
+                                    <ComboBoxItem Content="字符串"/>
+                                    <ComboBoxItem Content="正则表达式"/>
+                                </ComboBox>
+                                <Label/>
+                                <TextBox VerticalAlignment="Center" Text="{Binding SearchContent}"/>
+                                <Label/>
+                                <TextBlock VerticalAlignment="Center">
+                                    <Hyperlink Command="{x:Static local:MainWindow.SearchCmd}">检索</Hyperlink>
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                        <ListView x:Name="textFileListView" ItemsSource="{Binding Corpus.TextFiles}">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="路径" DisplayMemberBinding="{Binding Path}"/>
+                                    <GridViewColumn Header="编码" DisplayMemberBinding="{Binding Encoding}"/>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </DockPanel>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
+    </DockPanel>
+</Window>
