@@ -77,7 +77,7 @@ namespace LingStudioWinFormsApp
             fileToolStripStatusLabel.Text = e.Node.Name;
             fileBytes = File.ReadAllBytes(e.Node.Name);
             ChooseBaseN(2);
-            
+
             int i, j;
 
             // May encoding be utf8?
@@ -177,7 +177,7 @@ namespace LingStudioWinFormsApp
                 }
                 else
                     mayBeGb = false;
-            
+
             utf8ToolStripButton.Enabled = mayBeUtf8;
             gbToolStripButton.Enabled = mayBeGb;
             if (mayBeUtf8)
@@ -248,6 +248,13 @@ namespace LingStudioWinFormsApp
             listBox1.MultiColumn = multiColumnToolStripButton.Checked;
         }
 
+        private void wrapToolStripButton_CheckedChanged(object sender, EventArgs e)
+        {
+            ignoreSelectionChanged = true;
+            richTextBox1.WordWrap = wrapToolStripButton.Checked;
+            ignoreSelectionChanged = false;
+        }
+
         private void utf8ToolStripButton_Click(object sender, EventArgs e)
         {
             ChooseEncoding("utf8");
@@ -282,111 +289,17 @@ namespace LingStudioWinFormsApp
             }
         }
 
-        private bool EncodingMayBe(byte[] bytes, string encoding)
-        {
-            bool mayBe = true;
-            int i = 0;
-            switch (encoding)
-            {
-                case "utf8":
-                    while (mayBe && i < bytes.Length)
-                        if (bytes[i] <= 0x7F)
-                            i++;
-                        else if (bytes[i] >= 0xC2 && bytes[i] <= 0xDF)
-                        {
-                            if (i < bytes.Length - 1 && bytes[i + 1] >= 0x80 && bytes[i + 1] <= 0xBF)
-                                i += 2;
-                            else
-                                mayBe = false;
-                        }
-                        else if (bytes[i] >= 0xE0 && bytes[i] <= 0xEF)
-                        {
-                            if (i < bytes.Length - 2 && bytes[i + 1] >= 0x80 && bytes[i + 1] <= 0xBF && bytes[i + 2] >= 0x80 && bytes[i + 2] <= 0xBF)
-                            {
-                                if ((bytes[i] == 0xE0 && bytes[i + 1] < 0xA0) || (bytes[i] == 0xED && bytes[i + 1] > 0x9F))
-                                    mayBe = false;
-                                else
-                                    i += 3;
-                            }
-                            else
-                                mayBe = false;
-                        }
-                        else if (bytes[i] >= 0xF0 && bytes[i] <= 0xF4)
-                        {
-                            if (i < bytes.Length - 3 && bytes[i + 1] >= 0x80 && bytes[i + 1] <= 0xBF && bytes[i + 2] >= 0x80 && bytes[i + 2] <= 0xBF && bytes[i + 3] >= 0x80 && bytes[i + 3] <= 0xBF)
-                            {
-                                if ((bytes[i] == 0xF0 && bytes[i + 1] < 0x90) || (bytes[i] == 0xF4 && bytes[i + 1] > 0x8F))
-                                    mayBe = false;
-                                else
-                                    i += 4;
-                            }
-                            else
-                                mayBe = false;
-                        }
-                        else
-                            mayBe = false;
-                    break;
-                case "gb":
-                    while (mayBe && i < bytes.Length)
-                        if (bytes[i] == 0xFF)
-                            mayBe = false;
-                        else if (bytes[i] <= 0x80)
-                            i++;
-                        else if (i == bytes.Length - 1)
-                            mayBe = false;
-                        else
-                        {
-                            i++;
-                            if (bytes[i] == 0x7F)
-                                mayBe = false;
-                            else if (bytes[i] >= 0x40 && bytes[i] <= 0xFE)
-                                i++;
-                            else if (bytes[i] >= 0x30 && bytes[i] <= 0x39)
-                            {
-                                if (i == bytes.Length - 1)
-                                    mayBe = false;
-                                else
-                                {
-                                    i++;
-                                    if (bytes[i] >= 0x81 && bytes[i] <= 0xFE)
-                                    {
-                                        if (i == bytes.Length - 1)
-                                            mayBe = false;
-                                        else
-                                        {
-                                            i++;
-                                            if (bytes[i] >= 0x30 && bytes[i] <= 0x39)
-                                                i++;
-                                            else
-                                                mayBe = false;
-                                        }
-                                    }
-                                    else
-                                        mayBe = false;
-                                }
-                            }
-                            else
-                                mayBe = false;
-                        }
-                    break;
-            }
-            return mayBe;
-        }
-
         private void richTextBox1_SelectionChanged(object sender, EventArgs e)
         {
             if (!ignoreSelectionChanged)
             {
                 ignoreSelectionChanged = true;
                 listBox1.ClearSelected();
-                //listBox1.SelectedIndices.Clear();
                 int x = richTextBox1.SelectionStart;
                 int y = x + richTextBox1.SelectionLength;
-
-                // Solve the \r\n problem, though dirty
-                int xLine = richTextBox1.GetLineFromCharIndex(x);
-                int yLine = richTextBox1.GetLineFromCharIndex(y);
-                for (int i = x + xLine; i < y + yLine; i++)
+                int xOffset = richTextBox1.Text.Substring(0, x).Split('\n').Length - 1;
+                int yOffset = richTextBox1.Text.Substring(0, y).Split('\n').Length - 1;
+                for (int i = x + xOffset; i < y + yOffset; i++)
                 {
                     if (utf8ToolStripButton.Checked)
                     {

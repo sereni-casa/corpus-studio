@@ -49,6 +49,8 @@ namespace LingStudioWinFormsApp
             this.hexToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.toolStrip4 = new System.Windows.Forms.ToolStrip();
+            this.wrapToolStripButton = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
             this.utf8ToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.gbToolStripButton = new System.Windows.Forms.ToolStripButton();
@@ -187,6 +189,7 @@ namespace LingStudioWinFormsApp
             // listBox1
             // 
             this.listBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.listBox1.Enabled = false;
             this.listBox1.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.listBox1.ItemHeight = 36;
             this.listBox1.Location = new System.Drawing.Point(0, 50);
@@ -296,6 +299,8 @@ namespace LingStudioWinFormsApp
             this.toolStrip4.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip4.ImageScalingSize = new System.Drawing.Size(40, 40);
             this.toolStrip4.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.wrapToolStripButton,
+            this.toolStripSeparator2,
             this.toolStripLabel2,
             this.utf8ToolStripButton,
             this.gbToolStripButton});
@@ -305,6 +310,22 @@ namespace LingStudioWinFormsApp
             this.toolStrip4.Size = new System.Drawing.Size(752, 50);
             this.toolStrip4.TabIndex = 1;
             this.toolStrip4.Text = "toolStrip4";
+            // 
+            // wrapToolStripButton
+            // 
+            this.wrapToolStripButton.CheckOnClick = true;
+            this.wrapToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.wrapToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("wrapToolStripButton.Image")));
+            this.wrapToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.wrapToolStripButton.Name = "wrapToolStripButton";
+            this.wrapToolStripButton.Size = new System.Drawing.Size(141, 43);
+            this.wrapToolStripButton.Text = "自动换行";
+            this.wrapToolStripButton.CheckedChanged += new System.EventHandler(this.wrapToolStripButton_CheckedChanged);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 50);
             // 
             // toolStripLabel2
             // 
@@ -444,6 +465,8 @@ namespace LingStudioWinFormsApp
         private System.Windows.Forms.ToolStripButton utf8ToolStripButton;
         private System.Windows.Forms.ToolStripButton gbToolStripButton;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripButton wrapToolStripButton;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
     }
 }
 
