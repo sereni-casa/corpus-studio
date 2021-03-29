@@ -41,6 +41,7 @@ namespace LingStudioWinFormsApp
                 folder = folderBrowserDialog1.SelectedPath;
                 folderToolStripStatusLabel.Text = folder;
                 fileToolStripStatusLabel.Text = "无";
+                listBox1.Items.Clear();
                 richTextBox1.Clear();
                 treeView1.BeginUpdate();
                 treeView1.Nodes.Clear();
@@ -220,6 +221,7 @@ namespace LingStudioWinFormsApp
                 foreach (byte fileByte in fileBytes)
                     listBox1.Items.Add(Convert.ToString(fileByte, baseN).PadLeft(width, '0'));
                 listBox1.EndUpdate();
+                richTextBox1_SelectionChanged(null, null);
             }
         }
 
