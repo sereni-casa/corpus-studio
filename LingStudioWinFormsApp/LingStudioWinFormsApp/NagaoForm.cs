@@ -38,7 +38,7 @@ namespace LingStudioWinFormsApp
         {
             taskToolStripStatusLabel.Text = "正在生成 P 表";
             Application.DoEvents();
-            var time1 =  DateTime.Now;
+            var time1 = DateTime.Now;
             p = new int[corpus.Length];
             for (int i = 0; i < corpus.Length; i++) p[i] = i;
             Array.Sort(p, new Comparison<int>((x, y) =>
