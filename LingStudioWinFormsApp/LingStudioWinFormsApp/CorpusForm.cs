@@ -19,14 +19,13 @@ namespace LingStudioWinFormsApp
 
             if (File.Exists(corpusPath))
             {
-                //corpus = Corpus.FromJsonString(File.ReadAllText(corpusPath));
                 Corpus = Corpus.FromJsonBytes(File.ReadAllBytes(corpusPath));
-                textFileListBox.BeginUpdate();
-                foreach (string path in Corpus.TextFiles.Keys)
+                textFileListView.BeginUpdate();
+                foreach (var kvp in Corpus.TextFiles)
                 {
-                    textFileListBox.Items.Add(path);
+                    textFileListView.Items.Add(new ListViewItem(new string[] { kvp.Key, Convert.ToBase64String(kvp.Value) }));
                 }
-                textFileListBox.EndUpdate();
+                textFileListView.EndUpdate();
                 HasCorpusChanged = false;
             }
             else
@@ -41,47 +40,44 @@ namespace LingStudioWinFormsApp
         {
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                textFileListBox.BeginUpdate();
+                textFileListView.BeginUpdate();
                 foreach (string path in openFileDialog.FileNames)
                 {
-                    if (Corpus.TextFiles.ContainsKey(path)) MessageBox.Show("文件已存在");
+                    if (Corpus.TextFiles.ContainsKey(path)) MessageBox.Show("文件已在语料库中：" + path);
                     else
                     {
+                        byte[] md5 = null;
                         try
                         {
-                            Corpus.TextFiles.Add(path, new MD5CryptoServiceProvider().ComputeHash(File.OpenRead(path)));
+                            md5 = new MD5CryptoServiceProvider().ComputeHash(File.OpenRead(path));
                         }
                         catch (Exception)
                         {
-                            MessageBox.Show("文件无法打开");
-                            textFileListBox.EndUpdate();
+                            MessageBox.Show("文件无法打开：" + path);
+                            textFileListView.EndUpdate();
                         }
-                        textFileListBox.Items.Add(path);
+                        Corpus.TextFiles.Add(path, md5);
+                        textFileListView.Items.Add(new ListViewItem(new string[] { path, Convert.ToBase64String(md5) }));
                         HasCorpusChanged = true;
                     }
                 }
-                textFileListBox.EndUpdate();
+                textFileListView.EndUpdate();
             }
         }
 
         private void removeTextFileToolStripButton_Click(object sender, EventArgs e)
         {
-            if (textFileListBox.SelectedItems.Count == 0) MessageBox.Show("未选择要移除的语料文件");
+            if (textFileListView.SelectedItems.Count == 0) MessageBox.Show("未选择要移除的语料文件。");
             else
             {
                 HasCorpusChanged = true;
-                foreach (string item in textFileListBox.SelectedItems)
+                textFileListView.BeginUpdate();
+                foreach (ListViewItem item in textFileListView.SelectedItems)
                 {
-                    Corpus.TextFiles.Remove(item);
-                    //textFileListBox.SelectedItems.Remove(item);
+                    Corpus.TextFiles.Remove(item.Text);
+                    item.Remove();
                 }
-                textFileListBox.BeginUpdate();
-                textFileListBox.Items.Clear();
-                foreach (string path in Corpus.TextFiles.Keys)
-                {
-                    textFileListBox.Items.Add(path);
-                }
-                textFileListBox.EndUpdate();
+                textFileListView.EndUpdate();
             }
         }
 
@@ -107,6 +103,47 @@ namespace LingStudioWinFormsApp
                         break;
                 }
             }
+        }
+
+        private void textFileListView_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (textFileListView.SelectedItems.Count == 0)
+            {
+                removeTextFileToolStripButton.Enabled = false;
+                md5ToolStripButton.Enabled = false;
+            }
+            else
+            {
+                removeTextFileToolStripButton.Enabled = true;
+                md5ToolStripButton.Enabled = true;
+            }
+        }
+
+        private void md5ToolStripButton_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in textFileListView.SelectedItems)
+            {
+                byte[] md5 = null;
+                try
+                {
+                    md5 = new MD5CryptoServiceProvider().ComputeHash(File.OpenRead(item.Text));
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("文件无法打开：" + item.Text, "MD5 校验");
+                }
+                if (Convert.ToBase64String(md5) == Convert.ToBase64String(Corpus.TextFiles[item.Text]))
+                {
+                    MessageBox.Show("校验成功：" + item.Text, "MD5 校验");
+                }
+                else if (MessageBox.Show("校验失败：" + item.Text + "\r\n原校验码：" + Convert.ToBase64String(Corpus.TextFiles[item.Text]) + "\r\n新校验码：" + Convert.ToBase64String(md5) + "\r\n是否更新校验码？", "MD5 校验", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    Corpus.TextFiles[item.Text] = md5;
+                    HasCorpusChanged = true;
+                }
+
+            }
+
         }
     }
 }
