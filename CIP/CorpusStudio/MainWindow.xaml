@@ -1,0 +1,23 @@
+﻿<Window x:Class="CorpusStudio.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CorpusStudio"
+        mc:Ignorable="d" SizeToContent="WidthAndHeight" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen" Icon="/corpus-studio.icon.png">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Label x:Name="label" Content="Corpus Studio" FontSize="24" Grid.ColumnSpan="3" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+        <Button x:Name="btnNew" Content="新建语料库" Grid.Row="1" Margin="8,8,4,8" Click="NewCorpus"/>
+        <Button x:Name="btnOpen" Content="打开语料库" Grid.Row="1" Margin="4,8,4,8" Grid.Column="1" Click="OpenCorpus" />
+        <Button x:Name="btnExit" Content="退出" Grid.Row="1" Margin="4,8,8,8" Grid.Column="2" Click="Exit"/>
+    </Grid>
+</Window>

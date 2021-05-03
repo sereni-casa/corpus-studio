@@ -36,15 +36,27 @@ namespace LingStudioWinFormsApp
             this.textFileListView = new System.Windows.Forms.ListView();
             this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
             this.columnHeader2 = new System.Windows.Forms.ColumnHeader();
+            this.columnHeader3 = new System.Windows.Forms.ColumnHeader();
             this.textFileToolStrip = new System.Windows.Forms.ToolStrip();
             this.addTextFileToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.removeTextFileToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.md5ToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.basicSearchTabPage = new System.Windows.Forms.TabPage();
+            this.searchListView = new System.Windows.Forms.ListView();
+            this.columnHeader4 = new System.Windows.Forms.ColumnHeader();
+            this.columnHeader5 = new System.Windows.Forms.ColumnHeader();
+            this.searchToolStrip = new System.Windows.Forms.ToolStrip();
+            this.searchToolStripLabel = new System.Windows.Forms.ToolStripLabel();
+            this.searchToolStripTextBox = new System.Windows.Forms.ToolStripTextBox();
+            this.searchToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.columnHeader6 = new System.Windows.Forms.ColumnHeader();
+            this.columnHeader7 = new System.Windows.Forms.ColumnHeader();
             this.tabControl.SuspendLayout();
             this.fileTabPage.SuspendLayout();
             this.textFileToolStrip.SuspendLayout();
+            this.basicSearchTabPage.SuspendLayout();
+            this.searchToolStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // statusStrip
@@ -83,7 +95,8 @@ namespace LingStudioWinFormsApp
             // 
             this.textFileListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1,
-            this.columnHeader2});
+            this.columnHeader2,
+            this.columnHeader3});
             this.textFileListView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.textFileListView.HideSelection = false;
             this.textFileListView.Location = new System.Drawing.Point(3, 3);
@@ -103,6 +116,11 @@ namespace LingStudioWinFormsApp
             // 
             this.columnHeader2.Text = "MD5 校验码";
             this.columnHeader2.Width = 600;
+            // 
+            // columnHeader3
+            // 
+            this.columnHeader3.Text = "编码";
+            this.columnHeader3.Width = 240;
             // 
             // textFileToolStrip
             // 
@@ -153,6 +171,8 @@ namespace LingStudioWinFormsApp
             // 
             // basicSearchTabPage
             // 
+            this.basicSearchTabPage.Controls.Add(this.searchListView);
+            this.basicSearchTabPage.Controls.Add(this.searchToolStrip);
             this.basicSearchTabPage.Location = new System.Drawing.Point(10, 56);
             this.basicSearchTabPage.Name = "basicSearchTabPage";
             this.basicSearchTabPage.Padding = new System.Windows.Forms.Padding(3);
@@ -161,11 +181,85 @@ namespace LingStudioWinFormsApp
             this.basicSearchTabPage.Text = "基本检索";
             this.basicSearchTabPage.UseVisualStyleBackColor = true;
             // 
+            // searchListView
+            // 
+            this.searchListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader4,
+            this.columnHeader5,
+            this.columnHeader6,
+            this.columnHeader7});
+            this.searchListView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.searchListView.HideSelection = false;
+            this.searchListView.Location = new System.Drawing.Point(3, 53);
+            this.searchListView.Name = "searchListView";
+            this.searchListView.Size = new System.Drawing.Size(1862, 848);
+            this.searchListView.TabIndex = 3;
+            this.searchListView.UseCompatibleStateImageBehavior = false;
+            this.searchListView.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeader4
+            // 
+            this.columnHeader4.Text = "前文";
+            this.columnHeader4.Width = 600;
+            // 
+            // columnHeader5
+            // 
+            this.columnHeader5.Text = "检索内容";
+            this.columnHeader5.Width = 240;
+            // 
+            // searchToolStrip
+            // 
+            this.searchToolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.searchToolStrip.ImageScalingSize = new System.Drawing.Size(40, 40);
+            this.searchToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.searchToolStripLabel,
+            this.searchToolStripTextBox,
+            this.searchToolStripButton});
+            this.searchToolStrip.Location = new System.Drawing.Point(3, 3);
+            this.searchToolStrip.Name = "searchToolStrip";
+            this.searchToolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
+            this.searchToolStrip.Size = new System.Drawing.Size(1862, 50);
+            this.searchToolStrip.TabIndex = 4;
+            this.searchToolStrip.Text = "toolStrip1";
+            // 
+            // searchToolStripLabel
+            // 
+            this.searchToolStripLabel.Name = "searchToolStripLabel";
+            this.searchToolStripLabel.Size = new System.Drawing.Size(167, 43);
+            this.searchToolStripLabel.Text = "检索内容：";
+            // 
+            // searchToolStripTextBox
+            // 
+            this.searchToolStripTextBox.Name = "searchToolStripTextBox";
+            this.searchToolStripTextBox.Size = new System.Drawing.Size(200, 50);
+            this.searchToolStripTextBox.TextChanged += new System.EventHandler(this.searchToolStripTextBox_TextChanged);
+            // 
+            // searchToolStripButton
+            // 
+            this.searchToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.searchToolStripButton.Enabled = false;
+            this.searchToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("searchToolStripButton.Image")));
+            this.searchToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.searchToolStripButton.Name = "searchToolStripButton";
+            this.searchToolStripButton.Size = new System.Drawing.Size(81, 43);
+            this.searchToolStripButton.Text = "检索";
+            this.searchToolStripButton.Click += new System.EventHandler(this.searchToolStripButton_Click);
+            // 
             // openFileDialog
             // 
             this.openFileDialog.Filter = "文本文件|*.txt";
             this.openFileDialog.Multiselect = true;
             this.openFileDialog.Title = "打开文件";
+            // 
+            // columnHeader6
+            // 
+            this.columnHeader6.Text = "后文";
+            this.columnHeader6.Width = 600;
+            // 
+            // columnHeader7
+            // 
+            this.columnHeader7.Text = "路径";
+            this.columnHeader7.Width = 300;
             // 
             // CorpusForm
             // 
@@ -183,6 +277,10 @@ namespace LingStudioWinFormsApp
             this.fileTabPage.PerformLayout();
             this.textFileToolStrip.ResumeLayout(false);
             this.textFileToolStrip.PerformLayout();
+            this.basicSearchTabPage.ResumeLayout(false);
+            this.basicSearchTabPage.PerformLayout();
+            this.searchToolStrip.ResumeLayout(false);
+            this.searchToolStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -202,5 +300,15 @@ namespace LingStudioWinFormsApp
         private System.Windows.Forms.ToolStripButton addTextFileToolStripButton;
         private System.Windows.Forms.ToolStripButton removeTextFileToolStripButton;
         private System.Windows.Forms.ToolStripButton md5ToolStripButton;
+        private System.Windows.Forms.ListView searchListView;
+        private System.Windows.Forms.ToolStrip searchToolStrip;
+        private System.Windows.Forms.ToolStripLabel searchToolStripLabel;
+        private System.Windows.Forms.ToolStripTextBox searchToolStripTextBox;
+        private System.Windows.Forms.ToolStripButton searchToolStripButton;
+        private System.Windows.Forms.ColumnHeader columnHeader3;
+        private System.Windows.Forms.ColumnHeader columnHeader4;
+        private System.Windows.Forms.ColumnHeader columnHeader5;
+        private System.Windows.Forms.ColumnHeader columnHeader6;
+        private System.Windows.Forms.ColumnHeader columnHeader7;
     }
 }

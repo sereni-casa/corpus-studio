@@ -4,7 +4,7 @@ namespace LingStudioWinFormsApp
 {
     static class ExtensionClass
     {
-        static bool MayBeUtf8Encoded(this byte[] encoded)
+        public static bool MayBeUtf8Encoded(this byte[] encoded)
         {
             bool mayBe = true;
             int i = 0;
@@ -19,7 +19,7 @@ namespace LingStudioWinFormsApp
             return mayBe;
         }
 
-        static bool MayBeGbEncoded(this byte[] encoded)
+        public static bool MayBeGbEncoded(this byte[] encoded)
         {
             bool mayBe = true;
             int i = 0;
@@ -35,7 +35,7 @@ namespace LingStudioWinFormsApp
 
         public static string Utf8Decode(this byte[] encoded) => new UTF8Encoding().GetString(encoded);
 
-        static string GbDecode(this byte[] encoded) => Encoding.GetEncoding(54936).GetString(encoded);
+        public static string GbDecode(this byte[] encoded) => Encoding.GetEncoding(54936).GetString(encoded);
 
         // https://www.unicode.org/charts/unihangridindex.html
         static bool IsHan(this Rune rune) => rune.Value is (>= 0x3400 and <= 0x4dbf) or (>= 0x4e00 and <= 0x9ffc) or (>= 0xf900 and <= 0xfad9) or (>= 0x20000 and <= 0x2a6dd) or (>= 0x2a700 and <= 0x2b734) or (>= 0x2b740 and <= 0x2b81d) or (>= 0x2b820 and <= 0x2cea1) or (>= 0x2ceb0 and <= 0x2ebe0) or (>= 0x2f800 and <= 0x2fa1d) or (>= 0x30000 and <= 0x3134a);

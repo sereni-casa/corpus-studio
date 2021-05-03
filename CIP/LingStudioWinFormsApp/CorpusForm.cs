@@ -23,7 +23,7 @@ namespace LingStudioWinFormsApp
                 textFileListView.BeginUpdate();
                 foreach (var kvp in Corpus.TextFiles)
                 {
-                    textFileListView.Items.Add(new ListViewItem(new string[] { kvp.Key, Convert.ToBase64String(kvp.Value) }));
+                    textFileListView.Items.Add(new ListViewItem(new string[] { kvp.Key, Convert.ToBase64String(kvp.Value.Md5), kvp.Value.Encoding }));
                 }
                 textFileListView.EndUpdate();
                 HasCorpusChanged = false;
@@ -46,18 +46,24 @@ namespace LingStudioWinFormsApp
                     if (Corpus.TextFiles.ContainsKey(path)) MessageBox.Show("文件已在语料库中：" + path);
                     else
                     {
-                        byte[] md5 = null;
+                        byte[] file = null;
                         try
                         {
-                            md5 = new MD5CryptoServiceProvider().ComputeHash(File.OpenRead(path));
+                            file = File.ReadAllBytes(path);
+                            //md5 = new MD5CryptoServiceProvider().ComputeHash(File.OpenRead(path));
                         }
                         catch (Exception)
                         {
                             MessageBox.Show("文件无法打开：" + path);
                             textFileListView.EndUpdate();
                         }
-                        Corpus.TextFiles.Add(path, md5);
-                        textFileListView.Items.Add(new ListViewItem(new string[] { path, Convert.ToBase64String(md5) }));
+                        byte[] md5 = new MD5CryptoServiceProvider().ComputeHash(file);
+                        string encoding = "?";
+                        if (file.MayBeUtf8Encoded()) encoding = "UTF-8";
+                        else if (file.MayBeGbEncoded()) encoding = "GB";
+
+                        Corpus.TextFiles.Add(path, new TextFile(md5, encoding));
+                        textFileListView.Items.Add(new ListViewItem(new string[] { path, Convert.ToBase64String(md5), encoding }));
                         HasCorpusChanged = true;
                     }
                 }
@@ -132,18 +138,52 @@ namespace LingStudioWinFormsApp
                 {
                     MessageBox.Show("文件无法打开：" + item.Text, "MD5 校验");
                 }
-                if (Convert.ToBase64String(md5) == Convert.ToBase64String(Corpus.TextFiles[item.Text]))
+                if (Convert.ToBase64String(md5) == Convert.ToBase64String(Corpus.TextFiles[item.Text].Md5))
                 {
                     MessageBox.Show("校验成功：" + item.Text, "MD5 校验");
                 }
-                else if (MessageBox.Show("校验失败：" + item.Text + "\r\n原校验码：" + Convert.ToBase64String(Corpus.TextFiles[item.Text]) + "\r\n新校验码：" + Convert.ToBase64String(md5) + "\r\n是否更新校验码？", "MD5 校验", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                else if (MessageBox.Show("校验失败：" + item.Text + "\r\n原校验码：" + Convert.ToBase64String(Corpus.TextFiles[item.Text].Md5) + "\r\n新校验码：" + Convert.ToBase64String(md5) + "\r\n是否更新校验码？", "MD5 校验", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
-                    Corpus.TextFiles[item.Text] = md5;
+                    Corpus.TextFiles[item.Text].Md5 = md5;
                     HasCorpusChanged = true;
                 }
-
             }
+        }
 
+        private void searchToolStripTextBox_TextChanged(object sender, EventArgs e) => searchToolStripButton.Enabled = searchToolStripTextBox.Text.Length > 0;
+
+        private void searchToolStripButton_Click(object sender, EventArgs e)
+        {
+            searchListView.Items.Clear();
+            searchListView.BeginUpdate();
+            foreach (var kvp in Corpus.TextFiles)
+            {
+                if (kvp.Value.Encoding != "?")
+                {
+                    byte[] file = null;
+                    try
+                    {
+                        file = File.ReadAllBytes(kvp.Key);
+                    }
+                    catch (Exception)
+                    {
+                        MessageBox.Show("无法打开文件：" + kvp.Key);
+                    }
+                    string text = "";
+                    if (kvp.Value.Encoding == "UTF-8") text = file.Utf8Decode();
+                    else if (kvp.Value.Encoding == "GB") text = file.GbDecode();
+                    int i = -1;
+                    string keyword = searchToolStripTextBox.Text;
+                    while ((i = text.IndexOf(keyword, i + 1)) != -1)
+                    {
+                        int left = Math.Max(i - 20, 0);
+                        int right = Math.Min(i + keyword.Length + 20, text.Length);
+                        searchListView.Items.Add(new ListViewItem(new string[] { text[left..i], keyword, text[(i + keyword.Length)..right], kvp.Key }));
+                    }
+                }
+            }
+            searchListView.EndUpdate();
+            MessageBox.Show("检索完毕。");
         }
     }
 }

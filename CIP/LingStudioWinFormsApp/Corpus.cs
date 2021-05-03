@@ -5,7 +5,8 @@ namespace LingStudioWinFormsApp
 {
     class Corpus
     {
-        public Dictionary<string, byte[]> TextFiles { get; set; }
+
+        public Dictionary<string, TextFile> TextFiles { get; set; }
 
         public static Corpus FromJsonString(string jsonString) => JsonSerializer.Deserialize<Corpus>(jsonString);
 
