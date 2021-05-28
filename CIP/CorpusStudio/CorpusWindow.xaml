@@ -19,7 +19,7 @@
                         <ToggleButton IsEnabled="False" x:Name="utf8EncodeButton" Content="UTF-8" Click="Utf8Encode"/>
                         <ToggleButton IsEnabled="False" x:Name="gbEncodeButton" Content="GB" Click="GbEncode"/>
                     </ToolBar>
-                    <ListView x:Name="textFileListView" SelectionChanged="SelectedFilesChanged">
+                    <ListView x:Name="textFileListView" GridViewColumnHeader.Click="SortListView" SelectionChanged="SelectedFilesChanged">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="路径" DisplayMemberBinding="{Binding Path}"/>
@@ -30,12 +30,48 @@
                 </DockPanel>
             </TabItem>
             <TabItem Header="串频统计">
-
+                <DockPanel>
+                    <DockPanel.Resources>
+                        <local:NgramOptions x:Key="ngramOptions"/>
+                    </DockPanel.Resources>
+                    <DockPanel.DataContext>
+                        <Binding Source="{StaticResource ngramOptions}"/>
+                    </DockPanel.DataContext>
+                    <Grid DockPanel.Dock="Top">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" Content="最小长度："/>
+                        <TextBox Grid.Column="1" VerticalAlignment="Center" Text="{Binding Path=MinLength, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Label Grid.Column="2" Content="最大长度："/>
+                        <TextBox Grid.Column="3" VerticalAlignment="Center" Text="{Binding Path=MaxLength, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Label Grid.Column="4" Content="最小频度："/>
+                        <TextBox Grid.Column="5" VerticalAlignment="Center" Text="{Binding Path=MinFreq, UpdateSourceTrigger=PropertyChanged}"/>
+                        <CheckBox Grid.Column="6" Content="仅限汉字词" VerticalAlignment="Center" IsChecked="{Binding Path=HanOnly, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Button Grid.Column="7" Content="统计" VerticalAlignment="Center" IsEnabled="{Binding Path=Valid, UpdateSourceTrigger=PropertyChanged}" Click="CalcFreq"/>
+                    </Grid>
+                    <ListView x:Name="freqListView" GridViewColumnHeader.Click="SortListView">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn x:Name="wordCol" Header="字词" DisplayMemberBinding="{Binding Key}"/>
+                                <GridViewColumn x:Name="freqCol" Header="频度" DisplayMemberBinding="{Binding Value}"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </DockPanel>
             </TabItem>
             <TabItem Header="字符检索">
                 <DockPanel>
                     <Grid DockPanel.Dock="Top">
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -55,9 +91,9 @@
                                 <ColumnDefinition/>
                             </Grid.ColumnDefinitions>
                             <Label Grid.Column="0" HorizontalAlignment="Right" Content="前文字符数："/>
-                            <TextBox x:Name="leftRangeTextBox" Grid.Column="1" VerticalAlignment="Center" Text="20" LostFocus="RangeTextBoxValidate"/>
+                            <TextBox x:Name="leftRangeTextBox" Grid.Column="1" VerticalAlignment="Center" Text="20" LostFocus="RangeValidate"/>
                             <Label Grid.Column="2" HorizontalAlignment="Right" Content="后文字符数："/>
-                            <TextBox x:Name="rightRangeTextBox" Grid.Column="3" VerticalAlignment="Center" Text="20" LostFocus="RangeTextBoxValidate"/>
+                            <TextBox x:Name="rightRangeTextBox" Grid.Column="3" VerticalAlignment="Center" Text="20" LostFocus="RangeValidate"/>
                         </Grid>
                         <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" Content="检索基本字符："/>
                         <TextBox x:Name="charTextBox" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center"/>
@@ -68,8 +104,11 @@
                         <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right" Content="检索字符串："/>
                         <TextBox x:Name="stringTextBox" Grid.Row="3" Grid.Column="1" VerticalAlignment="Center"/>
                         <Button Grid.Row="3" Grid.Column="2" Content="检索" DockPanel.Dock="Right" Click="SearchString" VerticalAlignment="Center"/>
+                        <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right" Content="检索模式（正则表达式）："/>
+                        <TextBox x:Name="regexTextBox" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center"/>
+                        <Button Grid.Row="4" Grid.Column="2" Content="检索" DockPanel.Dock="Right" Click="SearchRegex" VerticalAlignment="Center"/>
                     </Grid>
-                    <ListView x:Name="searchListView">
+                    <ListView x:Name="searchListView" GridViewColumnHeader.Click="SortListView">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="前文" DisplayMemberBinding="{Binding Left}"/>

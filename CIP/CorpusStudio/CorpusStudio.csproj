@@ -11,15 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="RibbonControlsLibrary" Version="4.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\CIPLib\CIPLib.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Resource Include="corpus-studio.icon.png" />
   </ItemGroup>
-
+  
 </Project>

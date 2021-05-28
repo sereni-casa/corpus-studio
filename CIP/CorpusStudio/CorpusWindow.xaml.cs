@@ -1,12 +1,17 @@
 ﻿using CIPLib;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 
 namespace CorpusStudio
 {
@@ -105,14 +110,10 @@ namespace CorpusStudio
 
         private void SearchChar(object sender, RoutedEventArgs e)
         {
-            if (charTextBox.Text == "")
-            {
-                searchListView.ItemsSource = null;
-                return;
-            }
+            searchListView.ItemsSource = null;
+            if (charTextBox.Text == "") return;
             string searchString = charTextBox.Text;
-            int leftRange = int.Parse(leftRangeTextBox.Text);
-            int rightRange = int.Parse(rightRangeTextBox.Text);
+            int leftRange = int.Parse(leftRangeTextBox.Text), rightRange = int.Parse(rightRangeTextBox.Text);
             List<SearchResult> searchResults = new();
             Corpus.TextFiles.AsParallel().ForAll(textFile =>
             {
@@ -143,20 +144,16 @@ namespace CorpusStudio
 
         private void SearchRune(object sender, RoutedEventArgs e)
         {
-            if (runeTextBox.Text == "")
-            {
-                searchListView.ItemsSource = null;
-                return;
-            }
+            searchListView.ItemsSource = null;
+            if (runeTextBox.Text == "") return;
             string searchString = runeTextBox.Text;
             List<Rune> searchRunes = searchString.EnumerateRunes().ToList();
-            int leftRange = int.Parse(leftRangeTextBox.Text);
-            int rightRange = int.Parse(rightRangeTextBox.Text);
+            int leftRange = int.Parse(leftRangeTextBox.Text), rightRange = int.Parse(rightRangeTextBox.Text);
             List<SearchResult> searchResults = new();
             Corpus.TextFiles.AsParallel().ForAll(textFile =>
             {
                 string text = textFile.GetText();
-                if (text == "")
+                if (text == null)
                 {
                     MessageBox.Show("读取文件失败：" + textFile.Path);
                 }
@@ -191,7 +188,7 @@ namespace CorpusStudio
             searchListView.ItemsSource = searchResults;
         }
 
-        private void RangeTextBoxValidate(object sender, RoutedEventArgs e)
+        private void RangeValidate(object sender, RoutedEventArgs e)
         {
             if (!int.TryParse((sender as TextBox).Text, out int value))
             {
@@ -202,26 +199,21 @@ namespace CorpusStudio
 
         private void SearchString(object sender, RoutedEventArgs e)
         {
-            if (stringTextBox.Text == "")
-            {
-                searchListView.ItemsSource = null;
-                return;
-            }
+            searchListView.ItemsSource = null;
+            if (stringTextBox.Text == "") return;
             string searchString = stringTextBox.Text;
-            int leftRange = int.Parse(leftRangeTextBox.Text);
-            int rightRange = int.Parse(rightRangeTextBox.Text);
+            int leftRange = int.Parse(leftRangeTextBox.Text), rightRange = int.Parse(rightRangeTextBox.Text);
             List<SearchResult> searchResults = new();
             Corpus.TextFiles.AsParallel().ForAll(textFile =>
             {
                 string text = textFile.GetText();
-                if (text == "")
+                if (text == null)
                 {
                     MessageBox.Show("读取文件失败：" + textFile.Path);
                 }
                 else
                 {
-                    int start = 0;
-                    int i;
+                    int start = 0, i;
                     while ((i = text.IndexOf(searchString, start, StringComparison.Ordinal)) != -1)
                     {
                         searchResults.Add(new SearchResult()
@@ -263,6 +255,7 @@ namespace CorpusStudio
                                  .AsParallel()
                                  .Where(textfile => textfile.MayBeUtf8Encoded())
                                  .ForAll(textfile => textfile.Encoding = "UTF-8");
+            utf8EncodeButton.IsChecked = true;
         }
 
         private void GbEncode(object sender, RoutedEventArgs e)
@@ -271,7 +264,138 @@ namespace CorpusStudio
                                  .AsParallel()
                                  .Where(textfile => textfile.MayBeGbEncoded())
                                  .ForAll(textfile => textfile.Encoding = "GB");
+            gbEncodeButton.IsChecked = true;
+        }
 
+        private void CalcFreq(object sender, RoutedEventArgs e)
+        {
+            NgramOptions ngramOptions = (sender as Button).DataContext as NgramOptions;
+            int minLength = int.Parse(ngramOptions.MinLength), maxLength = int.Parse(ngramOptions.MaxLength), minFreq = int.Parse(ngramOptions.MinFreq);
+            bool hanOnly = ngramOptions.HanOnly;
+
+            Debug.WriteLine(DateTime.Now.ToString());
+
+            Dictionary<string, int> ngramDict = new(StringComparer.Ordinal);
+            foreach (TextFile textFile in Corpus.TextFiles)
+            {
+                string text = textFile.GetText();
+                if (text == null)
+                {
+                    MessageBox.Show("读取文件失败：" + textFile.Path);
+                    continue;
+                }
+                for (int i = 0; i < text.Length; i++)
+                {
+                    if (hanOnly)
+                    {
+                        bool ok = true;
+                        for (int n = 1; n <= Math.Min(minLength - 1, text.Length - i); n++)
+                        {
+                            if (!text[i + n - 1].IsHan())
+                            {
+                                ok = false;
+                                break;
+                            }
+                        }
+                        if (!ok) continue;
+                    }
+                    for (int n = minLength; n <= Math.Min(maxLength, text.Length - i) && (!hanOnly || text[i + n - 1].IsHan()); n++)
+                    {
+                        ngramDict[text.Substring(i, n)] = ngramDict.GetValueOrDefault(text.Substring(i, n), 0) + 1;
+                    }
+                }
+            }
+
+            Debug.WriteLine(DateTime.Now.ToString());
+
+            /*Corpus.TextFiles.AsParallel().ForAll(textFile =>
+            {
+                string text = textFile.GetText();
+                if (text == null)
+                {
+                    MessageBox.Show("读取文件失败：" + textFile.Path);
+                }
+                else
+                {
+                    int[] pointers = new int[text.Length];
+                    for (int i = 0; i < text.Length; i++) pointers[i] = i;
+                    Array.Sort(pointers, (x, y) =>
+                    {
+                        int i = 0;
+                        while (true)
+                        {
+                            if (x + i == text.Length) return -1;
+                            if (y + i == text.Length) return 1;
+                            if (text[x + i] < text[y + i]) return -1;
+                            if (text[x + i] > text[y + i]) return 1;
+                            i++;
+                        }
+                    }
+                    );
+                    int[] coCharNums = new int[text.Length];
+                    coCharNums[0] = 0;
+                    for (int i = 1; i < text.Length; i++)
+                    {
+                        coCharNums[i] = 0;
+                        while (pointers[i - 1] + coCharNums[i] < text.Length && pointers[i] + coCharNums[i] < text.Length && text[pointers[i - 1] + coCharNums[i]] == text[pointers[i] + coCharNums[i]]) coCharNums[i]++;
+                    }
+                    // TODO: Generate ngram table
+                }
+            });*/
+            freqListView.ItemsSource = ngramDict.Where(kvp => kvp.Value >= minFreq);
+        }
+
+        private void SortListView(object sender, RoutedEventArgs e)
+        {
+            IEnumerable itemsSource = (sender as ListView).ItemsSource;
+            if (itemsSource == null) return;
+            ICollectionView view = CollectionViewSource.GetDefaultView(itemsSource);
+            if (e.OriginalSource is not GridViewColumnHeader header || header.Role == GridViewColumnHeaderRole.Padding) return;
+            string propertyName = (header.Column.DisplayMemberBinding as Binding).Path.Path;
+            SortDescription descending = new(propertyName, ListSortDirection.Descending), ascending = new(propertyName, ListSortDirection.Ascending);
+            bool isAscending = view.SortDescriptions.Contains(ascending);
+            view.SortDescriptions.Clear();
+            view.SortDescriptions.Add(isAscending ? descending : ascending);
+            view.Refresh();
+        }
+
+        private void SearchRegex(object sender, RoutedEventArgs e)
+        {
+            searchListView.ItemsSource = null;
+            if (regexTextBox.Text == "") return;
+            string searchRegex = regexTextBox.Text;
+            int leftRange = int.Parse(leftRangeTextBox.Text), rightRange = int.Parse(rightRangeTextBox.Text);
+            List<SearchResult> searchResults = new();
+            Corpus.TextFiles.AsParallel().ForAll(textFile =>
+            {
+                string text = textFile.GetText();
+                if (text == null)
+                {
+                    MessageBox.Show("读取文件失败：" + textFile.Path);
+                }
+                else
+                {
+                    try
+                    {
+                        foreach (Match match in Regex.Matches(text, searchRegex))
+                        {
+                            searchResults.Add(new SearchResult()
+                            {
+                                Left = text[Math.Max(match.Index - leftRange, 0)..match.Index],
+                                Mid = match.Value,
+                                Right = text[(match.Index + match.Value.Length)..Math.Min(match.Index + match.Value.Length + rightRange, text.Length)],
+                                Path = textFile.Path
+                            });
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        MessageBox.Show("正则表达式错误");
+                        return;
+                    }
+                }
+            });
+            searchListView.ItemsSource = searchResults;
         }
     }
 }
