@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -32,6 +31,34 @@ namespace CorpusStudio
             textFileListView.ItemsSource = Corpus.TextFiles;
         }
 
+        private void AddFileToCorpus(string path)
+        {
+            if (Corpus.TextFiles.AsParallel().Any(textFile => textFile.Path == path))
+            {
+                MessageBox.Show("文件已在语料库中：" + path);
+            }
+            else
+            {
+                byte[] file;
+                try
+                {
+                    file = File.ReadAllBytes(path);
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("文件无法打开：" + path);
+                    return;
+                }
+                Corpus.TextFiles.Add(new TextFile()
+                {
+                    Path = path,
+                    Md5 = new MD5CryptoServiceProvider().ComputeHash(file),
+                    Encoding = file.MayBeUtf8Encoded() ? "UTF-8" : (file.MayBeGbEncoded() ? "GB" : "?")
+                });
+                HasCorpusChanged = true;
+            }
+        }
+
         private void AddFile(object sender, RoutedEventArgs e)
         {
             Microsoft.Win32.OpenFileDialog dialog = new()
@@ -44,30 +71,7 @@ namespace CorpusStudio
             {
                 foreach (string path in dialog.FileNames)
                 {
-                    if (Corpus.TextFiles.AsParallel().Any(textFile => textFile.Path == path))
-                    {
-                        MessageBox.Show("文件已在语料库中：" + path);
-                    }
-                    else
-                    {
-                        byte[] file;
-                        try
-                        {
-                            file = File.ReadAllBytes(path);
-                        }
-                        catch (Exception)
-                        {
-                            MessageBox.Show("文件无法打开：" + path);
-                            continue;
-                        }
-                        Corpus.TextFiles.Add(new TextFile()
-                        {
-                            Path = path,
-                            Md5 = new MD5CryptoServiceProvider().ComputeHash(file),
-                            Encoding = file.MayBeUtf8Encoded() ? "UTF-8" : (file.MayBeGbEncoded() ? "GB" : "?")
-                        });
-                        HasCorpusChanged = true;
-                    }
+                    AddFileToCorpus(path);
                 }
             }
         }
@@ -273,7 +277,7 @@ namespace CorpusStudio
             int minLength = int.Parse(ngramOptions.MinLength), maxLength = int.Parse(ngramOptions.MaxLength), minFreq = int.Parse(ngramOptions.MinFreq);
             bool hanOnly = ngramOptions.HanOnly;
 
-            Debug.WriteLine(DateTime.Now.ToString());
+            DateTime time0 = DateTime.Now;
 
             Dictionary<string, int> ngramDict = new(StringComparer.Ordinal);
             foreach (TextFile textFile in Corpus.TextFiles)
@@ -305,8 +309,6 @@ namespace CorpusStudio
                     }
                 }
             }
-
-            Debug.WriteLine(DateTime.Now.ToString());
 
             /*Corpus.TextFiles.AsParallel().ForAll(textFile =>
             {
@@ -343,10 +345,13 @@ namespace CorpusStudio
                 }
             });*/
             freqListView.ItemsSource = ngramDict.Where(kvp => kvp.Value >= minFreq);
+            DateTime time1 = DateTime.Now;
+            MessageBox.Show("统计完成\r\n共计" + freqListView.Items.Count + "项\r\n耗时" + (time1 - time0).TotalSeconds.ToString() + "秒");
         }
 
         private void SortListView(object sender, RoutedEventArgs e)
         {
+            DateTime time0 = DateTime.Now;
             IEnumerable itemsSource = (sender as ListView).ItemsSource;
             if (itemsSource == null) return;
             ICollectionView view = CollectionViewSource.GetDefaultView(itemsSource);
@@ -357,6 +362,8 @@ namespace CorpusStudio
             view.SortDescriptions.Clear();
             view.SortDescriptions.Add(isAscending ? descending : ascending);
             view.Refresh();
+            DateTime time1 = DateTime.Now;
+            MessageBox.Show("排序完成\r\n共计" + freqListView.Items.Count + "项\r\n耗时" + (time1 - time0).TotalSeconds.ToString() + "秒");
         }
 
         private void SearchRegex(object sender, RoutedEventArgs e)
@@ -396,6 +403,42 @@ namespace CorpusStudio
                 }
             });
             searchListView.ItemsSource = searchResults;
+        }
+
+        private void AddFolder(object sender, RoutedEventArgs e)
+        {
+            using Microsoft.WindowsAPICodePack.Dialogs.CommonOpenFileDialog dialog = new() { IsFolderPicker = true, Multiselect = true };
+            if (dialog.ShowDialog(this) == Microsoft.WindowsAPICodePack.Dialogs.CommonFileDialogResult.Ok)
+            {
+                foreach (string folder in dialog.FileNames)
+                {
+                    foreach (string file in Directory.EnumerateFiles(folder, "*.txt"))
+                    {
+                        AddFileToCorpus(file);
+                    }
+                }
+            }
+        }
+
+        private void AddFolderR(object sender, RoutedEventArgs e)
+        {
+            using Microsoft.WindowsAPICodePack.Dialogs.CommonOpenFileDialog dialog = new() { IsFolderPicker = true, Multiselect = true };
+            if (dialog.ShowDialog(this) == Microsoft.WindowsAPICodePack.Dialogs.CommonFileDialogResult.Ok)
+            {
+                Queue<string> folders = new(dialog.FileNames);
+                while (folders.Count > 0)
+                {
+                    string folder = folders.Dequeue();
+                    foreach (string subfolder in Directory.EnumerateDirectories(folder))
+                    {
+                        folders.Enqueue(subfolder);
+                    }
+                    foreach (string file in Directory.EnumerateFiles(folder, "*.txt"))
+                    {
+                        AddFileToCorpus(file);
+                    }
+                }
+            }
         }
     }
 }

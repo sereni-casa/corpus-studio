@@ -14,10 +14,7 @@ namespace CIPLib
 
         public static Corpus FromJsonBytes(byte[] jsonBytes) => JsonSerializer.Deserialize<Corpus>(jsonBytes);
 
-        public Corpus()
-        {
-            TextFiles = new();
-        }
+        public Corpus() => TextFiles = new();
 
         public string ToJsonString() => JsonSerializer.Serialize(this);
 

@@ -12,10 +12,12 @@
                 <DockPanel>
                     <ToolBar DockPanel.Dock="Top">
                         <Button Content="添加文件..." Click="AddFile"/>
-                        <Button x:Name="removeTextFileButton" Content="从语料库中删除" Click="RemoveFile" IsEnabled="False"/>
+                        <Button Content="添加文件夹中的所有文件..." Click="AddFolder"/>
+                        <Button Content="递归地添加文件夹中的所有文件..." Click="AddFolderR"/>
+                        <Button x:Name="removeTextFileButton" Content="从语料库中删除所选文件" Click="RemoveFile" IsEnabled="False"/>
                         <Button Content="清空语料库" Click="RemoveFiles"/>
                         <Separator/>
-                        <Label Content="选择编码："/>
+                        <Label Content="所选文件的编码："/>
                         <ToggleButton IsEnabled="False" x:Name="utf8EncodeButton" Content="UTF-8" Click="Utf8Encode"/>
                         <ToggleButton IsEnabled="False" x:Name="gbEncodeButton" Content="GB" Click="GbEncode"/>
                     </ToolBar>
@@ -67,7 +69,7 @@
                     </ListView>
                 </DockPanel>
             </TabItem>
-            <TabItem Header="字符检索">
+            <TabItem Header="内容检索">
                 <DockPanel>
                     <Grid DockPanel.Dock="Top">
                         <Grid.RowDefinitions>
@@ -95,16 +97,16 @@
                             <Label Grid.Column="2" HorizontalAlignment="Right" Content="后文字符数："/>
                             <TextBox x:Name="rightRangeTextBox" Grid.Column="3" VerticalAlignment="Center" Text="20" LostFocus="RangeValidate"/>
                         </Grid>
-                        <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" Content="检索基本字符："/>
+                        <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" Content="字符检索："/>
                         <TextBox x:Name="charTextBox" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center"/>
                         <Button Grid.Row="1" Grid.Column="2" Content="检索" DockPanel.Dock="Right" Click="SearchChar" VerticalAlignment="Center"/>
-                        <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right" Content="检索字符："/>
+                        <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right" Content="高级字符检索："/>
                         <TextBox x:Name="runeTextBox" Grid.Row="2" Grid.Column="1" VerticalAlignment="Center"/>
                         <Button Grid.Row="2" Grid.Column="2" Content="检索" DockPanel.Dock="Right" Click="SearchRune" VerticalAlignment="Center"/>
-                        <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right" Content="检索字符串："/>
+                        <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right" Content="字符串检索："/>
                         <TextBox x:Name="stringTextBox" Grid.Row="3" Grid.Column="1" VerticalAlignment="Center"/>
                         <Button Grid.Row="3" Grid.Column="2" Content="检索" DockPanel.Dock="Right" Click="SearchString" VerticalAlignment="Center"/>
-                        <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right" Content="检索模式（正则表达式）："/>
+                        <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right" Content="正则表达式检索："/>
                         <TextBox x:Name="regexTextBox" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center"/>
                         <Button Grid.Row="4" Grid.Column="2" Content="检索" DockPanel.Dock="Right" Click="SearchRegex" VerticalAlignment="Center"/>
                     </Grid>
