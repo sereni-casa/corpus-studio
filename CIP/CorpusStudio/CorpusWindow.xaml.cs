@@ -116,6 +116,7 @@ namespace CorpusStudio
         {
             searchListView.ItemsSource = null;
             if (charTextBox.Text == "") return;
+            DateTime time0 = DateTime.Now;
             string searchString = charTextBox.Text;
             int leftRange = int.Parse(leftRangeTextBox.Text), rightRange = int.Parse(rightRangeTextBox.Text);
             List<SearchResult> searchResults = new();
@@ -144,12 +145,15 @@ namespace CorpusStudio
                 }
             });
             searchListView.ItemsSource = searchResults;
+            DateTime time1 = DateTime.Now;
+            MessageBox.Show("检索完成\r\n共计" + searchListView.Items.Count + "项\r\n耗时" + (time1 - time0).TotalSeconds.ToString() + "秒");
         }
 
         private void SearchRune(object sender, RoutedEventArgs e)
         {
             searchListView.ItemsSource = null;
             if (runeTextBox.Text == "") return;
+            DateTime time0 = DateTime.Now;
             string searchString = runeTextBox.Text;
             List<Rune> searchRunes = searchString.EnumerateRunes().ToList();
             int leftRange = int.Parse(leftRangeTextBox.Text), rightRange = int.Parse(rightRangeTextBox.Text);
@@ -190,6 +194,8 @@ namespace CorpusStudio
                 }
             });
             searchListView.ItemsSource = searchResults;
+            DateTime time1 = DateTime.Now;
+            MessageBox.Show("检索完成\r\n共计" + searchListView.Items.Count + "项\r\n耗时" + (time1 - time0).TotalSeconds.ToString() + "秒");
         }
 
         private void RangeValidate(object sender, RoutedEventArgs e)
@@ -205,6 +211,7 @@ namespace CorpusStudio
         {
             searchListView.ItemsSource = null;
             if (stringTextBox.Text == "") return;
+            DateTime time0 = DateTime.Now;
             string searchString = stringTextBox.Text;
             int leftRange = int.Parse(leftRangeTextBox.Text), rightRange = int.Parse(rightRangeTextBox.Text);
             List<SearchResult> searchResults = new();
@@ -232,6 +239,8 @@ namespace CorpusStudio
                 }
             });
             searchListView.ItemsSource = searchResults;
+            DateTime time1 = DateTime.Now;
+            MessageBox.Show("检索完成\r\n共计" + searchListView.Items.Count + "项\r\n耗时" + (time1 - time0).TotalSeconds.ToString() + "秒");
         }
 
         private void SelectedFilesChanged(object sender, SelectionChangedEventArgs e)
@@ -259,6 +268,9 @@ namespace CorpusStudio
                                  .AsParallel()
                                  .Where(textfile => textfile.MayBeUtf8Encoded())
                                  .ForAll(textfile => textfile.Encoding = "UTF-8");
+            textFileListView.Items.Refresh();
+            HasCorpusChanged = true;
+            gbEncodeButton.IsChecked = false;
             utf8EncodeButton.IsChecked = true;
         }
 
@@ -268,6 +280,9 @@ namespace CorpusStudio
                                  .AsParallel()
                                  .Where(textfile => textfile.MayBeGbEncoded())
                                  .ForAll(textfile => textfile.Encoding = "GB");
+            textFileListView.Items.Refresh();
+            HasCorpusChanged = true;
+            utf8EncodeButton.IsChecked = false;
             gbEncodeButton.IsChecked = true;
         }
 
@@ -363,13 +378,14 @@ namespace CorpusStudio
             view.SortDescriptions.Add(isAscending ? descending : ascending);
             view.Refresh();
             DateTime time1 = DateTime.Now;
-            MessageBox.Show("排序完成\r\n共计" + freqListView.Items.Count + "项\r\n耗时" + (time1 - time0).TotalSeconds.ToString() + "秒");
+            MessageBox.Show("排序完成\r\n共计" + (sender as ListView).Items.Count + "项\r\n耗时" + (time1 - time0).TotalSeconds.ToString() + "秒");
         }
 
         private void SearchRegex(object sender, RoutedEventArgs e)
         {
             searchListView.ItemsSource = null;
             if (regexTextBox.Text == "") return;
+            DateTime time0 = DateTime.Now;
             string searchRegex = regexTextBox.Text;
             int leftRange = int.Parse(leftRangeTextBox.Text), rightRange = int.Parse(rightRangeTextBox.Text);
             List<SearchResult> searchResults = new();
@@ -403,6 +419,8 @@ namespace CorpusStudio
                 }
             });
             searchListView.ItemsSource = searchResults;
+            DateTime time1 = DateTime.Now;
+            MessageBox.Show("检索完成\r\n共计" + searchListView.Items.Count + "项\r\n耗时" + (time1 - time0).TotalSeconds.ToString() + "秒");
         }
 
         private void AddFolder(object sender, RoutedEventArgs e)
