@@ -5,9 +5,11 @@ namespace CorpusStudio
 {
     public class MainWindowResources : INotifyPropertyChanged
     {
-        private CorpusInfo selectedCorpus;
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public ObservableCollection<CorpusInfo> CorpusCollection { get; set; } = new();
+
+        private CorpusInfo selectedCorpus;
 
         public CorpusInfo SelectedCorpus
         {
@@ -21,8 +23,6 @@ namespace CorpusStudio
                 }
             }
         }
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
     }
 }

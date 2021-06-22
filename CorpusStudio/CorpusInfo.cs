@@ -8,11 +8,16 @@ namespace CorpusStudio
     {
         private bool unsaved;
 
+        public CorpusInfo(bool unsaved)
+        {
+            this.unsaved = unsaved;
+        }
+
         public string FilePath { get; set; }
         public Corpus Corpus { get; set; }
 
-        public bool Unsaved 
-        { 
+        public bool Unsaved
+        {
             get => unsaved;
             set
             {
@@ -30,8 +35,94 @@ namespace CorpusStudio
 
         public string SaveStatus => Unsaved ? "未保存" : "已保存";
 
-        public ObservableCollection<TextFile> SelectedTextFiles { get; set; } = new();
+        public string CountMinLen
+        {
+            get => countMinLen;
+            set
+            {
+                countMinLen = value;
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(CountMinLen)));
+            }
+        }
 
+        public string CountMaxLen
+        {
+            get => countMaxLen;
+            set
+            {
+                countMaxLen = value;
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(CountMaxLen)));
+            }
+        }
+
+        public string CountMinFreq
+        {
+            get => countMinFreq;
+            set
+            {
+                countMinFreq = value;
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(CountMinFreq)));
+            }
+        }
+
+        public bool CountHanOnly
+        {
+            get => countHanOnly;
+            set
+            {
+                countHanOnly = value;
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(CountHanOnly)));
+            }
+        }
+
+        public string SearchLeftLen
+        {
+            get => searchLeftLen;
+            set
+            {
+                searchLeftLen = value;
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(SearchLeftLen)));
+            }
+        }
+
+        public string SearchRightLen
+        {
+            get => searchRightLen;
+            set
+            {
+                searchRightLen = value;
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(SearchRightLen)));
+            }
+        }
+
+        public int SearchMode
+        {
+            get => searchMode;
+            set
+            {
+                searchMode = value;
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(SearchMode)));
+            }
+        }
+
+        public string SearchContent
+        {
+            get => searchContent;
+            set
+            {
+                searchContent = value;
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(SearchContent)));
+            }
+        }
+
+        private string countMinLen = "2";
+        private string countMaxLen = "4";
+        private string countMinFreq = "100";
+        private bool countHanOnly = true;
+        private string searchLeftLen = "20";
+        private string searchRightLen = "20";
+        private int searchMode;
+        private string searchContent = "的";
 
         public event PropertyChangedEventHandler PropertyChanged;
     }

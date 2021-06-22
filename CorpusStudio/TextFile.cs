@@ -1,22 +1,35 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 
 namespace CorpusStudio
 {
-    public class TextFile
+    public class TextFile : INotifyPropertyChanged
     {
+        private string encoding;
+
         public string Path { get; set; }
         public byte[] Md5 { get; set; }
-        public string Encoding { get; set; }
+        public string Encoding
+        {
+            get => encoding;
+            set
+            {
+                if (encoding != value)
+                {
+                    encoding = value;
+                    PropertyChanged(this, new PropertyChangedEventArgs(nameof(Encoding)));
+                }
+            }
+        }
 
-        public TextFile() { }
-
-        public TextFile(string path, byte[] md5, string encoding)
+        public TextFile(string path, string encoding)
         {
             Path = path;
-            Md5 = md5;
-            Encoding = encoding;
+            this.encoding = encoding;
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public byte[] GetBytes()
         {
