@@ -1,28 +1,68 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.Win32;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Windows;
 
 namespace CorpusStudio
 {
-    class Excel
+    public static class Excel
     {
+        public static void ExportXlsx(IEnumerable<KeyValuePair<string, int>> results)
+        {
+            SaveFileDialog dialog = new() { DefaultExt = ".xlsx", Filter = "Excel 工作簿|*.xlsx" };
+            if (dialog.ShowDialog() != true) return;
+            while (File.Exists(dialog.FileName))
+            {
+                try
+                {
+                    File.Delete(dialog.FileName);
+                }
+                catch (Exception)
+                {
+
+                    if (MessageBox.Show($"无法删除原有文件：{dialog.FileName}\r\n是否重试？", "覆盖文件", MessageBoxButton.YesNo) == MessageBoxResult.No) return;
+                }
+            }
+
+            SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Create(dialog.FileName, SpreadsheetDocumentType.Workbook);
+
+            WorkbookPart workbookpart = spreadsheetDocument.AddWorkbookPart();
+            workbookpart.Workbook = new Workbook();
+
+            WorksheetPart worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
+            worksheetPart.Worksheet = new Worksheet(new SheetData());
+
+            Sheets sheets = spreadsheetDocument.WorkbookPart.Workbook.AppendChild(new Sheets());
+
+            Sheet sheet = new() { Id = spreadsheetDocument.WorkbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "串频统计" };
+            sheets.Append(sheet);
+
+            SharedStringTablePart shareStringPart = spreadsheetDocument.WorkbookPart.AddNewPart<SharedStringTablePart>();
+            shareStringPart.SharedStringTable = new SharedStringTable();
+
+            InsertText("字符串", "A", 1, worksheetPart, shareStringPart);
+            InsertText("频次", "B", 1, worksheetPart, shareStringPart);
+
+            for (int i = 0; i < results.Count(); i++)
+            {
+                InsertText(results.ElementAt(i).Key, "A", (uint)i + 2, worksheetPart, shareStringPart);
+                InsertNumber(results.ElementAt(i).Value, "B", (uint)i + 2, worksheetPart, shareStringPart);
+            }
+
+            workbookpart.Workbook.Save();
+            spreadsheetDocument.Close();
+        }
+
+
         // Given a document name and text, 
         // inserts a new work sheet and writes the text to cell "A1" of the new worksheet.
-
-        public static void InsertText(SpreadsheetDocument spreadSheet, string text, string columnName, uint rowIndex, WorksheetPart worksheetPart)
+        public static void InsertText(string text, string columnName, uint rowIndex, WorksheetPart worksheetPart, SharedStringTablePart shareStringPart)
         {
-            // Get the SharedStringTablePart. If it does not exist, create a new one.
-            SharedStringTablePart shareStringPart;
-            if (spreadSheet.WorkbookPart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
-            {
-                shareStringPart = spreadSheet.WorkbookPart.GetPartsOfType<SharedStringTablePart>().First();
-            }
-            else
-            {
-                shareStringPart = spreadSheet.WorkbookPart.AddNewPart<SharedStringTablePart>();
-            }
-
             // Insert the text into the SharedStringTablePart.
             int index = InsertSharedStringItem(text, shareStringPart);
 
@@ -34,16 +74,21 @@ namespace CorpusStudio
             cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
         }
 
+        public static void InsertNumber(int number, string columnName, uint rowIndex, WorksheetPart worksheetPart, SharedStringTablePart shareStringPart)
+        {
+            // Insert cell A1 into the new worksheet.
+            Cell cell = InsertCellInWorksheet(columnName, rowIndex, worksheetPart);
+
+            // Set the value of cell A1.
+            cell.CellValue = new CellValue(number.ToString());
+            cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+        }
+
+
         // Given text and a SharedStringTablePart, creates a SharedStringItem with the specified text 
         // and inserts it into the SharedStringTablePart. If the item already exists, returns its index.
         private static int InsertSharedStringItem(string text, SharedStringTablePart shareStringPart)
         {
-            // If the part does not contain a SharedStringTable, create one.
-            if (shareStringPart.SharedStringTable == null)
-            {
-                shareStringPart.SharedStringTable = new SharedStringTable();
-            }
-
             int i = 0;
 
             // Iterate through all the items in the SharedStringTable. If the text already exists, return its index.
@@ -58,7 +103,7 @@ namespace CorpusStudio
             }
 
             // The text does not exist in the part. Create the SharedStringItem and return its index.
-            shareStringPart.SharedStringTable.AppendChild(new SharedStringItem(new DocumentFormat.OpenXml.Spreadsheet.Text(text)));
+            shareStringPart.SharedStringTable.AppendChild(new SharedStringItem(new Text(text)));
             shareStringPart.SharedStringTable.Save();
 
             return i;

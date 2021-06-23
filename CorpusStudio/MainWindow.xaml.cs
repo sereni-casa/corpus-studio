@@ -1,13 +1,12 @@
-﻿using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Spreadsheet;
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -206,38 +205,33 @@ namespace CorpusStudio
                     }
                 }
             }
-            var results = ngramDict.Where(kvp => kvp.Value >= minFreq);
+
+            //IEnumerable<CountResult> results = ngramDict.Where(kvp => kvp.Value >= minFreq).Select(kvp => new CountResult() { Str = kvp.Key, Freq = kvp.Value });
+            IEnumerable<CountResultChi> results = ngramDict.Where(kvp => kvp.Value >= minFreq).Select(kvp => new CountResultChi() { 字符串 = kvp.Key, 频次 = kvp.Value });
+
             DateTime time1 = DateTime.Now;
-            MessageBox.Show("统计完成\r\n共计" + results.Count() + "项\r\n耗时" + (time1 - time0).TotalSeconds.ToString() + "秒\r\n即将输出至Excel");
-            SaveFileDialog dialog = new() { DefaultExt = ".xlsx", Filter = "Excel 工作簿|*.xlsx" };
-            if (dialog.ShowDialog() != true) return;
-            SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Create(dialog.FileName, SpreadsheetDocumentType.Workbook);
+            MessageBox.Show("统计完成\r\n共计" + results.Count() + "项\r\n耗时" + (time1 - time0).TotalSeconds.ToString() + "秒");
 
-            WorkbookPart workbookpart = spreadsheetDocument.AddWorkbookPart();
-            workbookpart.Workbook = new Workbook();
+            OutputWindow outputWindow = new("串频统计");
+            outputWindow.SetDataToOutput(new ObservableCollection<object>(results.Cast<object>()));
+            outputWindow.Show();
 
-            WorksheetPart worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
-            worksheetPart.Worksheet = new Worksheet(new SheetData());
+        }
 
-            Sheets sheets = spreadsheetDocument.WorkbookPart.Workbook.AppendChild(new Sheets());
+        private struct CountResult
+        {
+            [JsonPropertyName("字符串")]
+            public string Str { get; set; }
 
-            Sheet sheet = new() { Id = spreadsheetDocument.WorkbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "串频统计" };
-            sheets.Append(sheet);
+            [JsonPropertyName("频次")]
+            public int Freq { get; set; }
+        }
 
+        private class CountResultChi
+        {
+            public string 字符串 { get; set; }
 
-            Excel.InsertText(spreadsheetDocument, "字符串", "A", 1, worksheetPart);
-            Excel.InsertText(spreadsheetDocument, "频次", "B", 1, worksheetPart);
-
-            for (int i = 0; i < results.Count(); i++)
-            {
-                Excel.InsertText(spreadsheetDocument, results.ElementAt(i).Key, "A", (uint)i + 2, worksheetPart);
-                Excel.InsertText(spreadsheetDocument, results.ElementAt(i).Value.ToString(), "B", (uint)i + 2, worksheetPart);
-            }
-
-            workbookpart.Workbook.Save();
-            spreadsheetDocument.Close();
-
-            
+            public int 频次 { get; set; }
         }
 
         private void CountCmdCanExecute(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = int.TryParse(data.SelectedCorpus.CountMinLen, out int minLen) && int.TryParse(data.SelectedCorpus.CountMaxLen, out int maxLen) && int.TryParse(data.SelectedCorpus.CountMinFreq, out int minFreq) && 0 < minLen && minLen <= maxLen && minFreq > 0;
