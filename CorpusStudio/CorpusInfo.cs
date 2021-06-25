@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.IO;
 
 namespace CorpusStudio
@@ -8,10 +7,7 @@ namespace CorpusStudio
     {
         private bool unsaved;
 
-        public CorpusInfo(bool unsaved)
-        {
-            this.unsaved = unsaved;
-        }
+        public CorpusInfo(bool unsaved) => this.unsaved = unsaved;
 
         public string FilePath { get; set; }
         public Corpus Corpus { get; set; }
@@ -21,13 +17,10 @@ namespace CorpusStudio
             get => unsaved;
             set
             {
-                if (unsaved != value)
-                {
-                    unsaved = value;
-                    PropertyChanged(this, new PropertyChangedEventArgs(nameof(Unsaved)));
-                    PropertyChanged(this, new PropertyChangedEventArgs(nameof(Name)));
-                    PropertyChanged(this, new PropertyChangedEventArgs(nameof(SaveStatus)));
-                }
+                unsaved = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Unsaved)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SaveStatus)));
             }
         }
 
@@ -41,7 +34,7 @@ namespace CorpusStudio
             set
             {
                 countMinLen = value;
-                PropertyChanged(this, new PropertyChangedEventArgs(nameof(CountMinLen)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CountMinLen)));
             }
         }
 
@@ -51,7 +44,7 @@ namespace CorpusStudio
             set
             {
                 countMaxLen = value;
-                PropertyChanged(this, new PropertyChangedEventArgs(nameof(CountMaxLen)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CountMaxLen)));
             }
         }
 
@@ -61,7 +54,7 @@ namespace CorpusStudio
             set
             {
                 countMinFreq = value;
-                PropertyChanged(this, new PropertyChangedEventArgs(nameof(CountMinFreq)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CountMinFreq)));
             }
         }
 
@@ -71,7 +64,7 @@ namespace CorpusStudio
             set
             {
                 countHanOnly = value;
-                PropertyChanged(this, new PropertyChangedEventArgs(nameof(CountHanOnly)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CountHanOnly)));
             }
         }
 
@@ -81,7 +74,7 @@ namespace CorpusStudio
             set
             {
                 searchLeftLen = value;
-                PropertyChanged(this, new PropertyChangedEventArgs(nameof(SearchLeftLen)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SearchLeftLen)));
             }
         }
 
@@ -91,7 +84,7 @@ namespace CorpusStudio
             set
             {
                 searchRightLen = value;
-                PropertyChanged(this, new PropertyChangedEventArgs(nameof(SearchRightLen)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SearchRightLen)));
             }
         }
 
@@ -101,7 +94,7 @@ namespace CorpusStudio
             set
             {
                 searchMode = value;
-                PropertyChanged(this, new PropertyChangedEventArgs(nameof(SearchMode)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SearchMode)));
             }
         }
 
@@ -111,7 +104,7 @@ namespace CorpusStudio
             set
             {
                 searchContent = value;
-                PropertyChanged(this, new PropertyChangedEventArgs(nameof(SearchContent)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SearchContent)));
             }
         }
 

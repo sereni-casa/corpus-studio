@@ -47,13 +47,13 @@ namespace CorpusStudio
 
         public string GetText() => Encoding switch
         {
-            "UTF-8" => GetBytes().Utf8Decode(),
-            "GB" => GetBytes().GbDecode(),
+            "UTF-8" => GetBytes()?.Utf8Decode() ?? null,
+            "GB" => GetBytes()?.GbDecode() ?? null,
             _ => null
         };
 
-        public bool MayBeUtf8Encoded() => GetBytes().MayBeUtf8Encoded();
+        public bool MayBeUtf8Encoded() => GetBytes()?.MayBeUtf8Encoded() ?? false;
 
-        public bool MayBeGbEncoded() => GetBytes().MayBeGbEncoded();
+        public bool MayBeGbEncoded() => GetBytes()?.MayBeGbEncoded() ?? false;
     }
 }

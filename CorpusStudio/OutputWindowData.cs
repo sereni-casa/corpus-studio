@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 
 namespace CorpusStudio
@@ -11,10 +12,7 @@ namespace CorpusStudio
 
         public OutputWindowData() { }
 
-        public OutputWindowData(string name)
-        {
-            Name = name;
-        }
+        public OutputWindowData(string name) => Name = name;
 
         public string Title { get => $"Corpus Stuidio 输出：{Name}"; }
 

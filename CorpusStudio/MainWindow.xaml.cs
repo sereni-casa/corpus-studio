@@ -6,7 +6,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text.Json.Serialization;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -31,6 +32,11 @@ namespace CorpusStudio
         {
             OpenFileDialog dialog = new() { DefaultExt = ".corpus", Filter = "语料库文件|*.corpus" };
             if (dialog.ShowDialog() != true) return;
+            if (data.CorpusCollection.Any(corpus => corpus.FilePath == dialog.FileName))
+            {
+                data.SelectedCorpus = data.CorpusCollection.First(corpus => corpus.FilePath == dialog.FileName);
+                return;
+            }
             try
             {
                 data.CorpusCollection.Add(new CorpusInfo(false) { FilePath = dialog.FileName, Corpus = Corpus.FromJsonBytes(File.ReadAllBytes(dialog.FileName)) });
@@ -206,8 +212,7 @@ namespace CorpusStudio
                 }
             }
 
-            //IEnumerable<CountResult> results = ngramDict.Where(kvp => kvp.Value >= minFreq).Select(kvp => new CountResult() { Str = kvp.Key, Freq = kvp.Value });
-            IEnumerable<CountResultChi> results = ngramDict.Where(kvp => kvp.Value >= minFreq).Select(kvp => new CountResultChi() { 字符串 = kvp.Key, 频次 = kvp.Value });
+            IEnumerable<CountResult> results = ngramDict.Where(kvp => kvp.Value >= minFreq).Select(kvp => new CountResult() { 字符串 = kvp.Key, 频次 = kvp.Value });
 
             DateTime time1 = DateTime.Now;
             MessageBox.Show("统计完成\r\n共计" + results.Count() + "项\r\n耗时" + (time1 - time0).TotalSeconds.ToString() + "秒");
@@ -215,30 +220,167 @@ namespace CorpusStudio
             OutputWindow outputWindow = new("串频统计");
             outputWindow.SetDataToOutput(new ObservableCollection<object>(results.Cast<object>()));
             outputWindow.Show();
-
         }
 
-        private struct CountResult
+        private class CountResult
         {
-            [JsonPropertyName("字符串")]
-            public string Str { get; set; }
-
-            [JsonPropertyName("频次")]
-            public int Freq { get; set; }
-        }
-
-        private class CountResultChi
-        {
-            public string 字符串 { get; set; }
+            public string 字符串 { get; set; } = "";
 
             public int 频次 { get; set; }
         }
 
         private void CountCmdCanExecute(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = int.TryParse(data.SelectedCorpus.CountMinLen, out int minLen) && int.TryParse(data.SelectedCorpus.CountMaxLen, out int maxLen) && int.TryParse(data.SelectedCorpus.CountMinFreq, out int minFreq) && 0 < minLen && minLen <= maxLen && minFreq > 0;
 
+        private class SearchResult
+        {
+            public string 前文 { get; set; } = "";
+            public string 目标 { get; set; } = "";
+            public string 后文 { get; set; } = "";
+            public string 语料 { get; set; } = "";
+            public string 逆序前文 { get; set; } = "";
+        }
+
         private void SearchCmdExecuted(object sender, ExecutedRoutedEventArgs e)
         {
+            int leftLen = int.Parse(data.SelectedCorpus.SearchLeftLen);
+            int rightLen = int.Parse(data.SelectedCorpus.SearchRightLen);
+            int mode = data.SelectedCorpus.SearchMode;
+            string content = data.SelectedCorpus.SearchContent;
+            DateTime time0 = DateTime.Now;
 
+            //ParallelQuery<SearchResult> results = data.SelectedCorpus.Corpus.TextFiles.AsParallel().SelectMany(textFile =>
+            //{
+            //    string text;
+            //    while ((text = textFile.GetText()) == null)
+            //    {
+            //        TaskDialog dialog = new();
+            //        dialog.InstructionText = "读取文件失败";
+            //        dialog.Text = $"读取文件失败：{textFile.Path}\r\n跳过该文件并继续检索？";
+            //        dialog.StandardButtons = TaskDialogStandardButtons.Ok | TaskDialogStandardButtons.Retry | TaskDialogStandardButtons.Cancel;
+            //        TaskDialogResult dialogResult = dialog.Show();
+            //        if (dialogResult == TaskDialogResult.Ok) break;
+            //        //if (dialogResult == TaskDialogResult.Cancel) loop.Stop();
+            //    }
+            //    if (text == null) return null;
+            //    if (mode == 0)
+            //    {
+            //        return from item in text.AsParallel().Select((chr, i) => (Chr: chr, I: i))
+            //               where content.Contains(item.Chr)
+            //               let left = text[Math.Max(item.I - leftLen, 0)..item.I] ?? ""
+            //               let right = text[(item.I + 1)..Math.Min(item.I + 1 + rightLen, text.Length)] ?? ""
+            //               select new SearchResult() { 前文 = left, 目标 = item.Chr.ToString(), 后文 = right, 语料 = textFile.Path, 逆序前文 = string.Concat(left.Reverse()) };
+            //    }
+            //    if (mode == 1)
+            //    {
+            //        Rune[] textRunes = text.EnumerateRunes().ToArray();
+            //        return from item in textRunes.AsParallel().Select((rune, i) => (Rune: rune, I: i))
+            //               where content.EnumerateRunes().Contains(item.Rune)
+            //               let left = string.Concat(textRunes[Math.Max(item.I - leftLen, 0)..item.I]) ?? ""
+            //               let right = string.Concat(textRunes[(item.I + 1)..Math.Min(item.I + 1 + rightLen, text.Length)]) ?? ""
+            //               select new SearchResult() { 前文 = left, 目标 = item.Rune.ToString(), 后文 = right, 语料 = textFile.Path, 逆序前文 = string.Concat(left.Reverse()) };
+            //    }
+            //    if (mode == 2)
+            //    {
+            //        List<SearchResult> subresults = new();
+            //        int start = 0, i;
+            //        while ((i = text.IndexOf(content, start, StringComparison.Ordinal)) != -1)
+            //        {
+            //            string left = text[Math.Max(i - leftLen, 0)..i] ?? "";
+            //            string right = text[(i + content.Length)..Math.Min(i + content.Length + rightLen, text.Length)] ?? "";
+            //            subresults.Add(new SearchResult() { 前文 = left, 目标 = content, 后文 = right, 语料 = textFile.Path, 逆序前文 = string.Concat(left.Reverse()) });
+            //            start = i + 1;
+            //        }
+            //        return subresults;
+            //    }
+            //    if (mode == 3)
+            //    {
+            //        try
+            //        {
+            //            return from Match match in Regex.Matches(text, content)
+            //                   let left = text[Math.Max(match.Index - leftLen, 0)..match.Index] ?? ""
+            //                   let right = text[(match.Index + match.Value.Length)..Math.Min(match.Index + match.Value.Length + rightLen, text.Length)] ?? ""
+            //                   select new SearchResult() { 前文 = left, 目标 = match.Value, 后文 = right, 语料 = textFile.Path, 逆序前文 = string.Concat(left.Reverse()) };
+            //        }
+            //        catch (Exception)
+            //        {
+            //            MessageBox.Show("正则表达式错误");
+            //            //loop.Stop();
+            //        }
+            //        return null;
+            //    }
+            //    return null;
+            //});
+
+            List<SearchResult> results = new();
+            foreach (TextFile textFile in data.SelectedCorpus.Corpus.TextFiles)
+            {
+                string text;
+                while ((text = textFile.GetText()) == null)
+                {
+                    TaskDialog dialog = new();
+                    dialog.InstructionText = "读取文件失败";
+                    dialog.Text = $"读取文件失败：{textFile.Path}\r\n跳过该文件并继续检索？";
+                    dialog.StandardButtons = TaskDialogStandardButtons.Ok | TaskDialogStandardButtons.Retry | TaskDialogStandardButtons.Cancel;
+                    TaskDialogResult dialogResult = dialog.Show();
+                    if (dialogResult == TaskDialogResult.Ok) break;
+                    if (dialogResult == TaskDialogResult.Cancel) return;
+                }
+                if (text == null) continue;
+                if (mode == 0)
+                {
+                    results.AddRange(from item in text.AsParallel().Select((chr, i) => (Chr: chr, I: i))
+                                     where content.Contains(item.Chr)
+                                     let left = text[Math.Max(item.I - leftLen, 0)..item.I] ?? ""
+                                     let right = text[(item.I + 1)..Math.Min(item.I + 1 + rightLen, text.Length)] ?? ""
+                                     select new SearchResult() { 前文 = left, 目标 = item.Chr.ToString(), 后文 = right, 语料 = textFile.Path, 逆序前文 = string.Concat(left.Reverse()) });
+                    continue;
+                }
+                if (mode == 1)
+                {
+                    Rune[] textRunes = text.EnumerateRunes().ToArray();
+                    foreach ((Rune rune, int i) in textRunes.Select((rune, i) => (Rune: rune, I: i)).Where(item => content.EnumerateRunes().Contains(item.Rune)))
+                    {
+                        string left = string.Concat(textRunes[Math.Max(i - leftLen, 0)..i]) ?? "";
+                        string right = string.Concat(textRunes[(i + 1)..Math.Min(i + 1 + rightLen, text.Length)]) ?? "";
+                        results.Add(new SearchResult() { 前文 = left, 目标 = rune.ToString(), 后文 = right, 语料 = textFile.Path, 逆序前文 = string.Concat(left.Reverse()) });
+                    }
+                    continue;
+                }
+                if (mode == 2)
+                {
+                    int start = 0, i;
+                    while ((i = text.IndexOf(content, start, StringComparison.Ordinal)) != -1)
+                    {
+                        string left = text[Math.Max(i - leftLen, 0)..i] ?? "";
+                        string right = text[(i + content.Length)..Math.Min(i + content.Length + rightLen, text.Length)] ?? "";
+                        results.Add(new SearchResult() { 前文 = left, 目标 = content, 后文 = right, 语料 = textFile.Path, 逆序前文 = string.Concat(left.Reverse()) });
+                        start = i + 1;
+                    }
+                    continue;
+                }
+                if (mode == 3)
+                {
+                    try
+                    {
+                        results.AddRange(from Match match in Regex.Matches(text, content)
+                                         let left = text[Math.Max(match.Index - leftLen, 0)..match.Index] ?? ""
+                                         let right = text[(match.Index + match.Value.Length)..Math.Min(match.Index + match.Value.Length + rightLen, text.Length)] ?? ""
+                                         select new SearchResult() { 前文 = left, 目标 = match.Value, 后文 = right, 语料 = textFile.Path, 逆序前文 = string.Concat(left.Reverse()) });
+                    }
+                    catch (Exception)
+                    {
+                        MessageBox.Show("正则表达式错误");
+                        return;
+                    }
+                    continue;
+                }
+            }
+
+            DateTime time1 = DateTime.Now;
+            MessageBox.Show("检索完成\r\n共计" + results.Count() + "项\r\n耗时" + (time1 - time0).TotalSeconds.ToString() + "秒");
+            OutputWindow outputWindow = new("检索");
+            outputWindow.SetDataToOutput(new ObservableCollection<object>(results.Cast<object>()));
+            outputWindow.Show();
         }
 
         private void SearchCmdCanExecute(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = data.SelectedCorpus.SearchContent != "" && int.TryParse(data.SelectedCorpus.SearchLeftLen, out int leftLen) && int.TryParse(data.SelectedCorpus.SearchRightLen, out int rightLen) && leftLen >= 0 && rightLen >= 0;
