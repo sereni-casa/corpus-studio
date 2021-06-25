@@ -16,6 +16,7 @@
         <CommandBinding Command="New" Executed="NewCmdExecuted" CanExecute="AlwaysCanExecute"/>
         <CommandBinding Command="Open" Executed="OpenCmdExecuted" CanExecute="AlwaysCanExecute"/>
         <CommandBinding Command="Save" Executed="SaveCmdExecuted" CanExecute="SaveCmdCanExecute"/>
+        <CommandBinding Command="SaveAs" Executed="SaveAsCmdExecuted" CanExecute="CanExecuteWhenHasSelectedCorpus"/>
         <CommandBinding Command="Close" Executed="CloseCmdExecuted" CanExecute="CanExecuteWhenHasSelectedCorpus"/>
         <CommandBinding Command="{x:Static local:MainWindow.AboutCmd}" Executed="AboutCmdExecuted" CanExecute="AlwaysCanExecute"/>
         <CommandBinding Command="{x:Static local:MainWindow.ExitCmd}" Executed="ExitCmdExecuted" CanExecute="AlwaysCanExecute"/>
@@ -31,10 +32,10 @@
     </Window.CommandBindings>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
-            <MenuItem Header="程序">
+            <!--<MenuItem Header="程序">
                 <MenuItem Header="关于" Command="{x:Static local:MainWindow.AboutCmd}"/>
                 <MenuItem Header="退出" Command="{x:Static local:MainWindow.ExitCmd}" InputGestureText="Alt+F4"/>
-            </MenuItem>
+            </MenuItem>-->
             <MenuItem Header="语料库">
                 <MenuItem Header="新建" Command="New"/>
                 <MenuItem Header="打开" Command="Open"/>

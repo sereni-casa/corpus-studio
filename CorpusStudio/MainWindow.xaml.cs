@@ -338,12 +338,11 @@ namespace CorpusStudio
                 if (mode == 1)
                 {
                     Rune[] textRunes = text.EnumerateRunes().ToArray();
-                    foreach ((Rune rune, int i) in textRunes.Select((rune, i) => (Rune: rune, I: i)).Where(item => content.EnumerateRunes().Contains(item.Rune)))
-                    {
-                        string left = string.Concat(textRunes[Math.Max(i - leftLen, 0)..i]) ?? "";
-                        string right = string.Concat(textRunes[(i + 1)..Math.Min(i + 1 + rightLen, text.Length)]) ?? "";
-                        results.Add(new SearchResult() { 前文 = left, 目标 = rune.ToString(), 后文 = right, 语料 = textFile.Path, 逆序前文 = string.Concat(left.Reverse()) });
-                    }
+                    results.AddRange(from item in textRunes.Select((rune, i) => (Rune: rune, I: i)).AsParallel()
+                                     where content.EnumerateRunes().Contains(item.Rune)
+                                     let left = string.Concat(textRunes[Math.Max(item.I - leftLen, 0)..item.I]) ?? ""
+                                     let right = string.Concat(textRunes[(item.I + 1)..Math.Min(item.I + 1 + rightLen, text.Length)]) ?? ""
+                                     select new SearchResult() { 前文 = left, 目标 = item.Rune.ToString(), 后文 = right, 语料 = textFile.Path, 逆序前文 = string.Concat(left.Reverse()) });
                     continue;
                 }
                 if (mode == 2)
@@ -384,6 +383,29 @@ namespace CorpusStudio
         }
 
         private void SearchCmdCanExecute(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = data.SelectedCorpus.SearchContent != "" && int.TryParse(data.SelectedCorpus.SearchLeftLen, out int leftLen) && int.TryParse(data.SelectedCorpus.SearchRightLen, out int rightLen) && leftLen >= 0 && rightLen >= 0;
+
+        private void SaveAsCmdExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            SaveFileDialog dialog = new() { DefaultExt = ".corpus", Filter = "语料库文件|*.corpus" };
+            if (dialog.ShowDialog() != true) return;
+            if (dialog.FileName == data.SelectedCorpus.FilePath)
+            {
+                SaveCmdExecuted(sender, e);
+                return;
+            }
+            try
+            {
+                File.WriteAllBytes(dialog.FileName, data.SelectedCorpus.Corpus.ToJsonBytes());
+            }
+            catch (Exception)
+            {
+                if (MessageBox.Show($"无法将语料库另存为 {dialog.FileName}\r\n是否重试？", "保存失败", MessageBoxButton.YesNo) == MessageBoxResult.Yes) SaveAsCmdExecuted(sender, e);
+                else return;
+            }
+            if (data.CorpusCollection.Any(corpus => corpus.FilePath == dialog.FileName)) data.CorpusCollection.Remove(data.CorpusCollection.First(corpus => corpus.FilePath == dialog.FileName));
+            data.CorpusCollection.Add(new CorpusInfo(false) { FilePath = dialog.FileName, Corpus = Corpus.FromJsonBytes(File.ReadAllBytes(dialog.FileName)) });
+            data.SelectedCorpus = data.CorpusCollection.Last();
+        }
 
         private void SaveAllCmdExecuted(object sender, ExecutedRoutedEventArgs e)
         {
