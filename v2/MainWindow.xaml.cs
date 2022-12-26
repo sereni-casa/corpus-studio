@@ -85,16 +85,12 @@ namespace CorpusStudio
                 {
                     string folder = folders.Dequeue();
                     if (path == "DirTree")
-                    {
                         foreach (string subfolder in Directory.EnumerateDirectories(folder))
-                        {
                             folders.Enqueue(subfolder);
-                        }
-                    }
                     foreach (string filePath in Directory.EnumerateFiles(folder, "*.txt"))
-                    {
                         TextFileAddCmd.Execute(filePath, sender as IInputElement);
-                    }
+                    foreach (string filePath in Directory.EnumerateFiles(folder, "*.md"))
+                        TextFileAddCmd.Execute(filePath, sender as IInputElement);
                 }
                 return;
             }
